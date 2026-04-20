@@ -1,7 +1,8 @@
-import cv2
 import os
-import numpy as np
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Do not alter this path!
 IMAGE_PATH: str = "data/Image01.png"
@@ -104,17 +105,25 @@ class ImageProcessor:
         if self._colour_type not in ["BGR", "RGB"]:
             raise ValueError("The function only works for colour images!")
 
+        if self._colour_type == "RGB":
+            r = self._image[:, :, 0]
+            g = self._image[:, :, 1]
+            b = self._image[:, :, 2]
+        else:
+            b = self._image[:, :, 0]
+            g = self._image[:, :, 1]
+            r = self._image[:, :, 2]
+
         if method == "lightness":
-            pass
+            self._image = (np.maximum(np.maximum(r, g), b) + np.minimum(np.minimum(r, g), b)) / 2
 
         if method == "average":
-            pass
+            self._image = (r + g + b) / 3
 
         if method == "luminosity":
-            pass
+            self._image = 0.21 * r + 0.73 * g + 0.07 * b
 
-        # ToDo: Update the colour type.
-        pass
+        self._colour_type = "Gray"
 
     def rotate_image(self, degrees: int = 0):
         """
@@ -166,8 +175,7 @@ class ImageProcessor:
         Args:
         new_height (int): Height of the resized image.
         new_width (int): Width of the resized image.
-        """
-        # ToDo: Resize the image. Research the available options in CV2.
+        """  # ToDo: Resize the image. Research the available options in CV2.
 
 
 if __name__ == '__main__':
