@@ -86,7 +86,9 @@ class ImageProcessor:
         clip_min (int): Minimum image colour intensity.
         clip_max (int): Maximum image colour intensity.
         """
-        # ToDo: Clip the image values to the given values.
+        self._image[self._image < clip_min] = clip_min
+        self._image[self._image > clip_max] = clip_max
+
         pass
 
     def convert_to_grayscale(self, method: str = "lightness"):
