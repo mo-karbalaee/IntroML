@@ -72,12 +72,9 @@ class ImageProcessor:
         if self._colour_type not in ["RGB", "BGR"]:
             raise ValueError("The function only works for colour images!")
 
-        if self._colour_type == "BGR":
-            self._image = cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB)
-            self._colour_type = "RGB"
-        elif self._colour_type == "RGB":
-            self._image = cv2.cvtColor(self._image, cv2.COLOR_RGB2BGR)
-            self._colour_type = "BGR"
+        self._image = self._image[:, :, ::-1]
+
+        self._colour_type = "RGB" if self._colour_type == "BGR" else "BGR"
 
     def clip_image(self, clip_min: int, clip_max: int):
         """
