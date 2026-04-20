@@ -8,6 +8,7 @@ IMAGE_PATH: str = "data/Image01.png"
 
 
 class ImageProcessor:
+
     def __init__(self, image_path: str, colour_type: str = "BGR"):
         """
         Load and save the provided image, the image colour type and the image directory.
@@ -22,9 +23,15 @@ class ImageProcessor:
         if colour_type not in ["BGR", "RGB", "Gray"]:
             raise ValueError("The given colour is not supported!")
 
-        # ToDo: Save the colour type and load the image using CV2.
         self._colour_type: str = colour_type
-        self._image: np.ndarray = np.zeros(0)
+        if self._colour_type == "BGR":
+            self._image: np.ndarray = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        elif self._colour_type == "RGB":
+            image_bgr: np.ndarray = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            self._image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+        else:
+            self._image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
 
     def show_image(self):
         """
