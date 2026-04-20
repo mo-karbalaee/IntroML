@@ -32,6 +32,9 @@ class ImageProcessor:
         else:
             self._image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
+    @property
+    def image(self):
+        return self._image
 
     def show_image(self):
         """
@@ -39,6 +42,8 @@ class ImageProcessor:
         """
 
         # ToDo: Show the image depending on the colour type.
+        plt.imshow(self._image)
+        plt.show()
         pass
 
     def save_image(self, image_title: str):
