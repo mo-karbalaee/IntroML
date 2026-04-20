@@ -42,7 +42,11 @@ class ImageProcessor:
         """
 
         # ToDo: Show the image depending on the colour type.
-        plt.imshow(self._image)
+        if self._colour_type == "Gray":
+            plt.imshow(self._image, cmap="gray")
+        else:
+            plt.imshow(self._image)
+
         plt.show()
         pass
 
