@@ -125,6 +125,12 @@ class ImageProcessor:
 
         self._colour_type = "Gray"
 
+    def rotate_90_degrees(self):
+        if self._image.ndim == 2:
+            self._image = self._image[::-1, :].T
+        else:
+            self._image = self._image[::-1, :, :].transpose(1, 0, 2)
+
     def rotate_image(self, degrees: int = 0):
         """
         Rotate an image by a given angle (k * 90) clockwise.
@@ -136,8 +142,22 @@ class ImageProcessor:
         if degrees % 90 != 0:
             raise ValueError("The provided rotation angle must be a multiple of 90!")
 
-        # ToDo: Rotate the image depending on the given rotation value.
-        pass
+        k = degrees // 90
+        k = k % 4
+
+        if k == 0:
+            pass
+        elif k == 1:
+            self.rotate_90_degrees()
+        elif k == 2:
+            self.rotate_90_degrees()
+            self.rotate_90_degrees()
+        else:
+            self.rotate_90_degrees()
+            self.rotate_90_degrees()
+            self.rotate_90_degrees()
+
+
 
     def flip_image(self, flip_value: int):
         """
