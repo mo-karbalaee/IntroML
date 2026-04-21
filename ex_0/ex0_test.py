@@ -4,9 +4,9 @@ import numpy as np
 import unittest
 from PIL import Image
 from unittest import TestCase
-from ex_0.ex0 import IMAGE_PATH, ImageProcessor
+from ex_0.ex0 import ImageProcessor
 
-IMAGE_PARENT_DIRECTORY: str = os.path.dirname(IMAGE_PATH)
+IMAGE_PARENT_DIRECTORY: str = os.path.dirname("./baboon.jpeg")
 
 
 def create_image(image_name: str) -> tuple[np.ndarray, str]:

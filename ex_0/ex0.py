@@ -33,9 +33,8 @@ class ImageProcessor:
         else:
             self._image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-    @property
-    def image(self):
-        return self._image
+    def get_image_data(self):
+        return self._image, self._colour_type
 
     def show_image(self):
         """
@@ -193,8 +192,6 @@ class ImageProcessor:
         else:
             self.flip_both()
 
-
-
     def crop_center(self, new_height: int, new_width: int):
         """
         Crop the image to a given size around the center.
@@ -204,11 +201,21 @@ class ImageProcessor:
         new_height (int): Height of the cropped image.
         new_width (int): Width of the cropped image.
         """
-        # ToDo: Check that the given parameters are valid!
-        pass
+        center_h = self._image.shape[0] // 2
+        center_w = self._image.shape[1] // 2
+        h_plus = center_h + new_height // 2
+        h_minus = center_h - new_height // 2
+        w_plus = center_w + new_width // 2
+        w_minus = center_w - new_width // 2
 
-        # ToDo: Crop the image around the center.
-        pass
+        if not isinstance(new_height, int) or not isinstance(new_width, int):
+            raise TypeError("Height and width must be integers!")
+        if new_height <= 0 or new_width <= 0:
+            raise ValueError("Height and width must be positive!")
+        if new_height > self._image.shape[0] or new_width > self._image.shape[1]:
+            raise ValueError("Crop size cannot be larger than the original image!")
+
+        self._image = self._image[h_minus: h_plus, w_minus: w_plus]
 
     def resize_image(self, new_height: int, new_width: int):
         """
