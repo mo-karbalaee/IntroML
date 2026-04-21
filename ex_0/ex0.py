@@ -157,7 +157,23 @@ class ImageProcessor:
             self.rotate_90_degrees()
             self.rotate_90_degrees()
 
+    def flip_vertically(self):
+        if self._image.ndim == 2:
+            self._image = self._image[::-1, :]
+        else:
+            self._image = self._image[::-1, :, :]
 
+    def flip_horizontally(self):
+        if self._image.ndim == 2:
+            self._image = self._image[:, ::-1]
+        else:
+            self._image = self._image[:, ::-1, :]
+
+    def flip_both(self):
+        if self._image.ndim == 2:
+            self._image = self._image[::-1, ::-1]
+        else:
+            self._image = self._image[::-1, ::-1, :]
 
     def flip_image(self, flip_value: int):
         """
@@ -170,8 +186,14 @@ class ImageProcessor:
         if flip_value not in [0, 1, 2]:
             raise ValueError("The provided flip value must be either 0, 1 or 2!")
 
-        # ToDo: Flip the image using indexing.
-        pass
+        if flip_value == 0:
+            self.flip_vertically()
+        elif flip_value == 1:
+            self.flip_horizontally()
+        else:
+            self.flip_both()
+
+
 
     def crop_center(self, new_height: int, new_width: int):
         """
