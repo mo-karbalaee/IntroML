@@ -224,7 +224,8 @@ class ImageProcessor:
         Args:
         new_height (int): Height of the resized image.
         new_width (int): Width of the resized image.
-        """  # ToDo: Resize the image. Research the available options in CV2.
+        """
+        self._image = cv2.resize(self._image, (new_height, new_width))
 
 
 if __name__ == '__main__':
