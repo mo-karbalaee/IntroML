@@ -2,7 +2,6 @@ import cv2
 import os
 import numpy as np
 import unittest
-from PIL import Image
 from unittest import TestCase
 from ex_0.ex0 import ImageProcessor
 
