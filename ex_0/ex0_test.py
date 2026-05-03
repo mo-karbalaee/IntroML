@@ -2,10 +2,11 @@ import cv2
 import os
 import numpy as np
 import unittest
+from PIL import Image
 from unittest import TestCase
-from ex_0.ex0 import ImageProcessor
+from ex_0.ex0 import IMAGE_PATH, ImageProcessor
 
-IMAGE_PARENT_DIRECTORY: str = os.path.dirname("./baboon.jpeg")
+IMAGE_PARENT_DIRECTORY: str = os.path.dirname(IMAGE_PATH)
 
 
 def create_image(image_name: str) -> tuple[np.ndarray, str]:
@@ -102,7 +103,7 @@ class Tests(TestCase):
 
         delete_image(image_path)
 
-    def test_flip_vertical(self):
+    def test_flip_horizontal(self):
         test_image, image_path = create_image("test.png")
 
         processor: ImageProcessor = ImageProcessor(image_path, "BGR")
@@ -112,11 +113,11 @@ class Tests(TestCase):
         test_image_flipped: np.ndarray = np.fliplr(test_image)
 
         self.assertEqual(flipped_image.all(), test_image_flipped.all(),
-                         "The vertical flip does not work correctly!")
+                         "The horizontal flip does not work correctly!")
 
         delete_image(image_path)
 
-    def test_flip_horizontal(self):
+    def test_flip_vertical(self):
         test_image, image_path = create_image("test.png")
 
         processor: ImageProcessor = ImageProcessor(image_path, "BGR")
@@ -126,7 +127,7 @@ class Tests(TestCase):
         test_image_flipped: np.ndarray = np.flipud(test_image)
 
         self.assertEqual(flipped_image.all(), test_image_flipped.all(),
-                         "The horizontal flip does not work correctly!")
+                         "The vertical flip does not work correctly!")
 
         delete_image(image_path)
 
