@@ -59,6 +59,7 @@ class ImageProcessor:
 
         # Combine the image parent directory and the given title to create the path for the new image.
         total_image_path: str = os.path.join(self._image_directory, image_title)
+        print(total_image_path)
 
         cv2.imwrite(total_image_path, self._image)
         pass
