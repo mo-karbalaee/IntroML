@@ -16,7 +16,7 @@ def normalize_histogram(histogram: np.ndarray):
 
     total_pixel_count = np.sum(histogram)
     prob = histogram / total_pixel_count
-    
+
     return prob
 
 
@@ -54,13 +54,18 @@ def mu_helper(prob: np.ndarray, theta: int, p0: float, p1: float) -> tuple[float
     return mu0, mu1
 
 
+def calculate_inter_class_variance(p0: float, p1: float, mu0:float, mu1: float):
+    """Calculates the between-class variance"""
+    return p0 * p1 * np.power((mu0 - mu1), 2)
+
+
 def otsu_threshold(histogram: np.ndarray) -> int:
     """Compute Otsu's threshold from a histogram."""
-    # ToDo: Implement full Otsu algorithm.
-    prob = histogram.astype(np.float64)  # later normalize
-    max_variance = 0.0
-    best_threshold = 0
-    return int(best_threshold)
+
+    prob = normalize_histogram(histogram=histogram)
+    candidate_thresholds = np.arange(256)
+
+    
 
 
 def otsu_binarize(image: np.ndarray) -> tuple[np.ndarray, int]:
