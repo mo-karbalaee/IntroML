@@ -28,9 +28,13 @@ def add_gaussian_noise(image: np.ndarray, mean: float = 0.0, sigma: float = 10.0
 
 
 def add_salt_and_pepper_noise(image: np.ndarray, salt_prob: float = 0.01, pepper_prob: float = 0.01) -> np.ndarray:
-    # ToDo: Generate random salt and pepper noise based on the provided probabilities.
-    # ToDo: Hint: Look at the options among np.random to generate the noise.
-    return image
+    noisy_image = image.copy()
+    random_matrix = np.random.random(image.shape)
+    
+    noisy_image[random_matrix < salt_prob] = 255
+    noisy_image[random_matrix < pepper_prob] = 0
+    
+    return noisy_image
 
 
 def add_poisson_noise(image: np.ndarray) -> np.ndarray:
