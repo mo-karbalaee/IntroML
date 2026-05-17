@@ -21,3 +21,14 @@ def show_histogram(histogram:np.ndarray):
     plt.xlim([0, 255])
 
     plt.show()
+
+def show_cdf(cdf: np.ndarray) -> None:
+    plt.figure(figsize=(8, 5))
+    plt.plot(np.arange(256), cdf, color='crimson')
+    plt.title('CDF')
+    plt.xlabel('Intensity')
+    plt.ylabel('Probability')
+    plt.xlim([0, 255])
+    plt.ylim([0, 1])
+    plt.grid(True)
+    plt.show()    

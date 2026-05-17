@@ -21,9 +21,11 @@ def compute_histogram(image: np.ndarray) -> np.ndarray:
 
 
 def compute_cdf(histogram: np.ndarray) -> np.ndarray:
-    # ToDo: Compute the CDF.
-    # ToDo: Don't forget to normalize it (turn it into a distribution).
-    cdf = np.zeros(0)
+    cumulative_sum = np.cumsum(histogram)
+    total_pixel_count = cumulative_sum[-1]
+    print(total_pixel_count)
+    cdf = cumulative_sum / total_pixel_count
+
     return cdf
 
 
