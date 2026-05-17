@@ -25,7 +25,7 @@ def show_histogram(histogram:np.ndarray):
 def show_cdf(cdf: np.ndarray) -> None:
     plt.figure(figsize=(8, 5))
     plt.plot(np.arange(256), cdf, color='crimson')
-    plt.title('CDF')
+    plt.title('Cumulative Distribution Function')
     plt.xlabel('Intensity')
     plt.ylabel('Probability')
     plt.xlim([0, 255])

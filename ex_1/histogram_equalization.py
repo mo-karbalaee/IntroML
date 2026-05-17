@@ -46,7 +46,6 @@ def save_image(image: np.ndarray, path: str) -> None:
 
 
 def show_images(original_image: np.ndarray, equalized_image: np.ndarray) -> None:
-    # ToDo: Display the original and the equalized images next to each other.
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
     plt.imshow(original_image, cmap='gray')
@@ -63,7 +62,6 @@ def show_images(original_image: np.ndarray, equalized_image: np.ndarray) -> None
 
 
 def histogram_equalization(input_path: str, output_path: str) -> None:
-    # ToDo: Combine the different functions into one.
     loaded_image = load_image(input_path)
     histogram = compute_histogram(loaded_image)
     cdf = compute_cdf(histogram)
