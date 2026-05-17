@@ -11,7 +11,7 @@ def load_image(path: str) -> np.ndarray:
     return loaded_image
 
 
-def normalize_histogram(histogram: np.ndarray):
+def _normalize_histogram(histogram: np.ndarray):
     """Compute bin probabilities out of the histogram by normalization."""
 
     total_pixel_count = np.sum(histogram)
@@ -56,7 +56,7 @@ def mu_helper(prob: np.ndarray, theta: int, p0: float, p1: float) -> tuple[float
     return mu0, mu1
 
 
-def calculate_inter_class_variance(p0: float, p1: float, mu0:float, mu1: float):
+def _calculate_inter_class_variance(p0: float, p1: float, mu0:float, mu1: float):
     """Calculates the between-class variance"""
     return p0 * p1 * np.power((mu0 - mu1), 2)
 
@@ -64,17 +64,17 @@ def calculate_inter_class_variance(p0: float, p1: float, mu0:float, mu1: float):
 def otsu_threshold(histogram: np.ndarray) -> int:
     """Compute Otsu's threshold from a histogram."""
 
-    prob = normalize_histogram(histogram=histogram)
+    prob = _normalize_histogram(histogram=histogram)
 
     def compute_variance(i):
         p0, p1 = p_helper(prob=prob, theta=i)
         mu0, mu1 = mu_helper(prob=prob, theta=i, p0=p0, p1=p1)
-        return calculate_inter_class_variance(p0, p1, mu0, mu1)
+        return _calculate_inter_class_variance(p0, p1, mu0, mu1)
 
     return np.argmax(list(map(compute_variance, range(256))))
 
 
-def general_binarizer(image:np.ndarray, theta:int):
+def _general_binarizer(image:np.ndarray, theta:int):
     """A general binarizer for any desired threshold."""
 
     binarized = image.copy()
@@ -88,13 +88,13 @@ def otsu_binarize(image: np.ndarray) -> tuple[np.ndarray, int]:
 
     histogram = compute_histogram(image)
     theta = otsu_threshold(histogram)
-    binarized = general_binarizer(image, theta)
+    binarized = _general_binarizer(image, theta)
 
     return binarized, theta
 
 
 def custom_binarization(image: np.ndarray, theta: int) -> tuple[np.ndarray, int]:
-    binarized = general_binarizer(image, theta)
+    binarized = _general_binarizer(image, theta)
 
     return binarized, theta
 
