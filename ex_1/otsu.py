@@ -20,9 +20,8 @@ def compute_histogram(image: np.ndarray) -> np.ndarray:
 
 def p_helper(prob: np.ndarray, theta: int) -> tuple[float, float]:
     """Compute class probabilities p0 and p1 for threshold theta."""
-    # ToDo: Implement actual probability computation.
-    p0 = 0.0
-    p1 = 0.0
+    p0 = np.sum(prob[:theta + 1])
+    p1 = np.sum(prob[theta + 1:])
     return p0, p1
 
 
