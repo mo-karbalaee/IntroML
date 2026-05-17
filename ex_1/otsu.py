@@ -11,6 +11,13 @@ def load_image(path: str) -> np.ndarray:
     return loaded_image
 
 
+def normalize_histogram(histogram: np.ndarray):
+    """Compute bin probabilities out of the histogram by normalization."""
+    total_pixel_count = np.sum(histogram)
+    prob = histogram / total_pixel_count
+    return prob
+
+
 def compute_histogram(image: np.ndarray) -> np.ndarray:
     """Compute a grayscale histogram with 256 bins."""
     image_flat = image.flatten()
