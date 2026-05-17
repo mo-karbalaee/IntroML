@@ -40,7 +40,9 @@ def p_helper(prob: np.ndarray, theta: int) -> tuple[float, float]:
 def mu_helper(prob: np.ndarray, theta: int, p0: float, p1: float) -> tuple[float, float]:
     """Compute class means mu0 and mu1 for threshold theta."""
 
-    indices = np.arange(256)
+    n = len(prob)
+    indices = np.arange(n)
+
     if p0 > 0:
         mu0 = np.dot(indices[:theta + 1], prob[:theta + 1]) / p0
     else:
@@ -77,7 +79,7 @@ def general_binarizer(image:np.ndarray, theta:int):
 
     binarized = image.copy()
     binarized[binarized <= theta] = 0
-    binarized[binarized > theta] = 1
+    binarized[binarized > theta] = 255
 
     return binarized
 
@@ -93,7 +95,7 @@ def otsu_binarize(image: np.ndarray) -> tuple[np.ndarray, int]:
 
 def custom_binarization(image: np.ndarray, theta: int) -> tuple[np.ndarray, int]:
     binarized = general_binarizer(image, theta)
-    
+
     return binarized, theta
 
 
