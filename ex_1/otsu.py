@@ -13,8 +13,8 @@ def load_image(path: str) -> np.ndarray:
 
 def compute_histogram(image: np.ndarray) -> np.ndarray:
     """Compute a grayscale histogram with 256 bins."""
-    # ToDo: Implement actual histogram calculation.
-    histogram = np.zeros(0)
+    image_flat = image.flatten()
+    histogram = np.bincount(image_flat, minlength=256)
     return histogram
 
 
