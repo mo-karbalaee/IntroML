@@ -63,10 +63,13 @@ def otsu_threshold(histogram: np.ndarray) -> int:
     """Compute Otsu's threshold from a histogram."""
 
     prob = normalize_histogram(histogram=histogram)
-    candidate_thresholds = np.arange(256)
 
-    
+    def compute_variance(i):
+        p0, p1 = p_helper(prob=prob, theta=i)
+        mu0, mu1 = mu_helper(prob=prob, theta=i, p0=p0, p1=p1)
+        return calculate_inter_class_variance(p0, p1, mu0, mu1)
 
+    return np.argmax(list(map(compute_variance, range(256))))    
 
 def otsu_binarize(image: np.ndarray) -> tuple[np.ndarray, int]:
     """Binarize an image using Otsu's threshold."""
