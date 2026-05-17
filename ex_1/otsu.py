@@ -13,20 +13,25 @@ def load_image(path: str) -> np.ndarray:
 
 def normalize_histogram(histogram: np.ndarray):
     """Compute bin probabilities out of the histogram by normalization."""
+
     total_pixel_count = np.sum(histogram)
     prob = histogram / total_pixel_count
+    
     return prob
 
 
 def compute_histogram(image: np.ndarray) -> np.ndarray:
     """Compute a grayscale histogram with 256 bins."""
+
     image_flat = image.flatten()
     histogram = np.bincount(image_flat, minlength=256)
+
     return histogram
 
 
 def p_helper(prob: np.ndarray, theta: int) -> tuple[float, float]:
     """Compute class probabilities p0 and p1 for threshold theta."""
+
     p0 = np.sum(prob[:theta + 1])
     p1 = np.sum(prob[theta + 1:])
     return p0, p1
@@ -34,9 +39,18 @@ def p_helper(prob: np.ndarray, theta: int) -> tuple[float, float]:
 
 def mu_helper(prob: np.ndarray, theta: int, p0: float, p1: float) -> tuple[float, float]:
     """Compute class means mu0 and mu1 for threshold theta."""
-    # ToDo: Implement actual mean computation.
-    mu0 = 0.0
-    mu1 = 0.0
+
+    indices = np.arange(256)
+    if p0 > 0:
+        mu0 = np.dot(indices[:theta + 1], prob[:theta + 1]) / p0
+    else:
+        mu0 = 0    
+
+    if p1 > 0:
+        mu1 = np.dot(indices[theta + 1:], prob[theta + 1:]) / p1
+    else:
+        mu1 = 0
+
     return mu0, mu1
 
 
