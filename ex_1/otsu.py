@@ -73,9 +73,13 @@ def otsu_threshold(histogram: np.ndarray) -> int:
 
 def otsu_binarize(image: np.ndarray) -> tuple[np.ndarray, int]:
     """Binarize an image using Otsu's threshold."""
-    # ToDo: Combine the helper functions to produce the binarized image.
-    theta = 0
-    binarized = np.zeros(0)
+
+    histogram = compute_histogram(image)
+    theta = otsu_threshold(histogram)
+    binarized = image.copy()
+    binarized[binarized <= theta] = 0
+    binarized[binarized > theta] = 1
+
     return binarized, theta
 
 
