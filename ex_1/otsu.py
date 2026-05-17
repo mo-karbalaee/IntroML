@@ -69,24 +69,32 @@ def otsu_threshold(histogram: np.ndarray) -> int:
         mu0, mu1 = mu_helper(prob=prob, theta=i, p0=p0, p1=p1)
         return calculate_inter_class_variance(p0, p1, mu0, mu1)
 
-    return np.argmax(list(map(compute_variance, range(256))))    
+    return np.argmax(list(map(compute_variance, range(256))))
+
+
+def general_binarizer(image:np.ndarray, theta:int):
+    """A general binarizer for any desired threshold."""
+
+    binarized = image.copy()
+    binarized[binarized <= theta] = 0
+    binarized[binarized > theta] = 1
+
+    return binarized
 
 def otsu_binarize(image: np.ndarray) -> tuple[np.ndarray, int]:
     """Binarize an image using Otsu's threshold."""
 
     histogram = compute_histogram(image)
     theta = otsu_threshold(histogram)
-    binarized = image.copy()
-    binarized[binarized <= theta] = 0
-    binarized[binarized > theta] = 1
+    binarized = general_binarizer(image, theta)
 
     return binarized, theta
 
 
 def custom_binarization(image: np.ndarray, theta: int) -> tuple[np.ndarray, int]:
-    # ToDo: Binarize the image with a custom value.
-    new_image = np.where(image > theta, 255, 0).astype(np.uint8)
-    return new_image, theta
+    binarized = general_binarizer(image, theta)
+    
+    return binarized, theta
 
 
 # Compatibility aliases for unit tests
