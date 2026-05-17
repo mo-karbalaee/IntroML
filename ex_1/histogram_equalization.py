@@ -30,9 +30,13 @@ def compute_cdf(histogram: np.ndarray) -> np.ndarray:
 
 
 def equalize_image(image: np.ndarray, cdf: np.ndarray) -> np.ndarray:
-    # ToDo: Apply histogram equalization to the given image.
-    # ToDo: Hint: Flatten the image first and reshape it again in the end.
-    equalized_image = np.zeros(0)
+    cdf_min = cdf[cdf > 0].min()
+    pixel_mapping = np.floor((cdf - cdf_min) / (1 - cdf_min) * 255).astype(np.uint8)
+    
+    flat_image = image.flatten()
+    equalized_flat = pixel_mapping[flat_image]
+    equalized_image = equalized_flat.reshape(image.shape)
+    
     return equalized_image
 
 
