@@ -34,9 +34,13 @@ def add_salt_and_pepper_noise(image: np.ndarray, salt_prob: float = 0.01, pepper
 
 
 def add_poisson_noise(image: np.ndarray) -> np.ndarray:
-    # ToDo: Add poisson noise to the image.
-    # ToDo: Hint: Look at the options among np.random to generate the noise.
-    return image
+    float_image = image.astype(np.float64)
+
+    noise = np.random.poisson(lam=float_image)
+    noisy_image = float_image + noise
+    np.clip(noisy_image, 0, 255, out=noisy_image)
+
+    return noisy_image.astype(np.uint8)
 
 
 def add_uniform_noise(image: np.ndarray, low: float = -20.0, high: float = 20.0) -> np.ndarray:
