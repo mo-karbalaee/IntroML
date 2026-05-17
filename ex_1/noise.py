@@ -18,10 +18,13 @@ def save_image(image: np.ndarray, file_path: str) -> None:
 
 
 def add_gaussian_noise(image: np.ndarray, mean: float = 0.0, sigma: float = 10.0) -> np.ndarray:
-    # ToDo: Generate gaussian noise and add it to the image.
-    # ToDo: Hint: Look at the options among np.random to generate the noise.
-    # ToDo: Hint: Don't forget to clip the values.
-    return image
+    float_image = image.astype(np.float64)
+
+    noise = np.random.normal(mean, sigma, float_image.shape)
+    noisy_image = float_image + noise
+    np.clip(noisy_image, 0, 255, out=noisy_image)
+
+    return noisy_image.astype(np.uint8)
 
 
 def add_salt_and_pepper_noise(image: np.ndarray, salt_prob: float = 0.01, pepper_prob: float = 0.01) -> np.ndarray:
