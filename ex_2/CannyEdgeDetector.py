@@ -16,12 +16,9 @@ def gaussFilter(img_in, ksize, sigma):
     """
 
     center = ksize // 2
-    kernel = np.zeros((ksize, ksize))
-    for x in range(ksize):
-        for y in range(ksize):
-            dx = x - center
-            dy = y - center
-            kernel[x, y] = (1 / (2 * np.pi * sigma**2)) * np.exp(-(dx**2 + dy**2) / (2 * sigma**2))
+    coords = np.arange(ksize) - center
+    x, y = np.meshgrid(coords, coords)
+    kernel = (1 / (2 * np.pi * sigma**2)) * np.exp(-(x**2 + y**2) / (2 * sigma**2))
     kernel /= kernel.sum()
     filtered = convolve(img_in, kernel).astype(int)
     return kernel, filtered
@@ -86,21 +83,25 @@ def maxSuppress(g, theta):
     :return: max_sup (np.ndarray)
     """
     
-    rows, cols = g.shape
+    deg = np.degrees(theta) % 180
+    angle = np.zeros_like(deg, dtype=int)
+    angle[(deg >= 22.5) & (deg < 67.5)] = 45
+    angle[(deg >= 67.5) & (deg < 112.5)] = 90
+    angle[(deg >= 112.5) & (deg < 157.5)] = 135
+ 
+    pad = np.pad(g, 1)
+    n1 = np.where(angle == 0,  pad[1:-1, :-2],
+         np.where(angle == 45, pad[2:,   :-2],
+         np.where(angle == 90, pad[:-2,  1:-1],
+                               pad[:-2,  :-2])))
+    n2 = np.where(angle == 0,  pad[1:-1, 2:],
+         np.where(angle == 45, pad[:-2,  2:],
+         np.where(angle == 90, pad[2:,   1:-1],
+                               pad[2:,   2:])))
+ 
     result = np.zeros_like(g)
-    for i in range(1, rows - 1):
-        for j in range(1, cols - 1):
-            angle = convertAngle(theta[i, j])
-            if angle == 0:
-                n1, n2 = g[i, j-1], g[i, j+1]
-            elif angle == 45:
-                n1, n2 = g[i+1, j-1], g[i-1, j+1]
-            elif angle == 90:
-                n1, n2 = g[i-1, j], g[i+1, j]
-            else:
-                n1, n2 = g[i-1, j-1], g[i+1, j+1]
-            if g[i, j] >= n1 and g[i, j] >= n2:
-                result[i, j] = g[i, j]
+    mask = (g >= n1) & (g >= n2)
+    result[1:-1, 1:-1] = np.where(mask[1:-1, 1:-1], g[1:-1, 1:-1], 0)
     return result
 
 
@@ -116,21 +117,17 @@ def hysteris(max_sup, t_low, t_high):
     :return: hysteris thresholded image (np.ndarray)
     """
         
-    rows, cols = max_sup.shape
     thresh = np.zeros_like(max_sup)
     thresh[max_sup > t_high] = 2
     thresh[(max_sup > t_low) & (max_sup <= t_high)] = 1
+ 
+    strong = (thresh == 2)
+    padded_strong = np.pad(strong.astype(np.uint8), 1)
+    neighbor_has_strong = np.lib.stride_tricks.sliding_window_view(padded_strong, (3, 3)).any(axis=(-2, -1))
+ 
     result = np.zeros_like(max_sup)
-    for i in range(rows):
-        for j in range(cols):
-            if thresh[i, j] == 2:
-                result[i, j] = 255
-                for di in [-1, 0, 1]:
-                    for dj in [-1, 0, 1]:
-                        ni, nj = i + di, j + dj
-                        if 0 <= ni < rows and 0 <= nj < cols:
-                            if thresh[ni, nj] >= 1:
-                                result[ni, nj] = 255
+    result[strong] = 255
+    result[(thresh >= 1) & neighbor_has_strong] = 255
     return result
 
 
