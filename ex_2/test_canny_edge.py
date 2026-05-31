@@ -56,7 +56,7 @@ class TestCanny(unittest.TestCase):
         self.assertIsInstance(g, np.ndarray, msg='Use numpy arrays')
         self.assertIsInstance(t, np.ndarray, msg='Use numpy arrays')
         self.assertTrue(g.dtype == int, msg='cast filtered image back to int')
-        self.assertTrue(t.dtype == float, msg='angles in radias should be floating point precision')
+        self.assertTrue(t.dtype == float, msg='angles in radius should be floating point precision')
         self.assertTrue(np.all(g == np.array([[19, 25], [12, 11]])) or np.all(g == np.array([[20, 26], [13, 11]])))
         self.assertTrue(np.allclose(t, np.array([[2.28, 0.95], [2.81, 0.09]]), rtol=RTOL))
 
