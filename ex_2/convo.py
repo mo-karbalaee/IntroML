@@ -3,13 +3,10 @@ import numpy as np
 
 
 def make_kernel(ksize, sigma):
-    kernel = np.zeros((ksize, ksize))
     center = ksize // 2
-    for x in range(ksize):
-        for y in range(ksize):
-            dx = x - center
-            dy = y - center
-            kernel[x, y] = (1 / (2 * np.pi * sigma**2)) * np.exp(-(dx**2 + dy**2) / (2 * sigma**2))
+    coords = np.arange(ksize) - center
+    x, y = np.meshgrid(coords, coords)
+    kernel = (1 / (2 * np.pi * sigma**2)) * np.exp(-(x**2 + y**2) / (2 * sigma**2))
     kernel /= kernel.sum()
     return kernel
 
@@ -24,13 +21,9 @@ def slow_convolve(arr, k):
     padded = np.zeros((I + pad_top + pad_bot, J + pad_left + pad_right))
     padded[pad_top:pad_top + I, pad_left:pad_left + J] = arr
     result = np.zeros((I, J))
-    for i in range(I):
-        for j in range(J):
-            val = 0.0
-            for u in range(U):
-                for v in range(V):
-                    val += k[u, v] * padded[i + (U - 1 - u), j + (V - 1 - v)]
-            result[i, j] = val
+    for u in range(U):
+        for v in range(V):
+            result += k[U - 1 - u, V - 1 - v] * padded[u:u+I, v:v+J]
     return result
 
 
