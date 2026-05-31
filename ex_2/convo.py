@@ -17,19 +17,19 @@ def make_kernel(ksize, sigma):
 def slow_convolve(arr, k):
     U, V = k.shape
     I, J = arr.shape
-    pad_u = U // 2
-    pad_v = V // 2
-    padded = np.zeros((I + 2 * pad_u, J + 2 * pad_v))
-    padded[pad_u:pad_u + I, pad_v:pad_v + J] = arr
+    pad_top = U // 2
+    pad_bot = U - 1 - pad_top
+    pad_left = V // 2
+    pad_right = V - 1 - pad_left
+    padded = np.zeros((I + pad_top + pad_bot, J + pad_left + pad_right))
+    padded[pad_top:pad_top + I, pad_left:pad_left + J] = arr
     result = np.zeros((I, J))
     for i in range(I):
         for j in range(J):
             val = 0.0
-            for u in range(-(U // 2), U - U // 2):
-                for v in range(-(V // 2), V - V // 2):
-                    ku = u + U // 2
-                    kv = v + V // 2
-                    val += k[ku, kv] * padded[i - u + pad_u, j - v + pad_v]
+            for u in range(U):
+                for v in range(V):
+                    val += k[u, v] * padded[i + (U - 1 - u), j + (V - 1 - v)]
             result[i, j] = val
     return result
 
