@@ -23,19 +23,11 @@ def erode_binary(image: np.ndarray, structuring_element: np.ndarray) -> np.ndarr
     se_size = structuring_element.shape[0]
     assert se_size == structuring_element.shape[1], "SE must be quadratic."
     assert se_size % 2 == 1, "SE size must be uneven."
-
-    radius = se_size // 2
-    padded = pad_image(image, radius)
-    output = np.zeros_like(image)
-    rows, cols = image.shape
-
-    for i in range(rows):
-        for j in range(cols):
-            region = extract_region(padded, i + radius, j + radius, se_size)
-            if np.all(region[structuring_element == 1] == 1):
-                output[i, j] = 1
-
-    return output
+ 
+    padded = pad_image(image, se_size // 2)
+    windows = np.lib.stride_tricks.sliding_window_view(padded, (se_size, se_size))
+    active = structuring_element == 1
+    return np.where(np.all(windows[:, :, active] == 1, axis=-1), 1, 0).astype(np.uint8)
 
 
 def dilate_binary(image: np.ndarray, structuring_element: np.ndarray) -> np.ndarray:
@@ -44,19 +36,11 @@ def dilate_binary(image: np.ndarray, structuring_element: np.ndarray) -> np.ndar
     se_size = structuring_element.shape[0]
     assert se_size == structuring_element.shape[1], "SE must be quadratic."
     assert se_size % 2 == 1, "SE size must be uneven."
-
-    radius = se_size // 2
-    padded = pad_image(image, radius)
-    output = np.zeros_like(image)
-    rows, cols = image.shape
-
-    for i in range(rows):
-        for j in range(cols):
-            region = extract_region(padded, i + radius, j + radius, se_size)
-            if np.any(region[structuring_element == 1] == 1):
-                output[i, j] = 1
-
-    return output
+ 
+    padded = pad_image(image, se_size // 2)
+    windows = np.lib.stride_tricks.sliding_window_view(padded, (se_size, se_size))
+    active = structuring_element == 1
+    return np.where(np.any(windows[:, :, active] == 1, axis=-1), 1, 0).astype(np.uint8)
 
 
 def open_binary(input_image: np.ndarray, structuring_element: np.ndarray, iterations: int = 1) -> np.ndarray:
