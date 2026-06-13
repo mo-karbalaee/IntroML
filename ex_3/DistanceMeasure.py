@@ -16,10 +16,8 @@ def mseDistance(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise ValueError("Images must have the same shape.")
 
-    # TODO: implement the MSE formula yourself with NumPy operations.
-    # Allowed: astype, subtraction, squaring, mean, or an explicit sum divided by the number of pixels.
-    # Not allowed: external metric/distance helpers from scipy, sklearn, cv2, etc.
-    pass
+    diff = imgA.astype(np.float32) - imgB.astype(np.float32)
+    return np.mean(diff**2)
 
 
 def euclideanDistance(featureA, featureB):
@@ -29,7 +27,5 @@ def euclideanDistance(featureA, featureB):
     if featureA.shape != featureB.shape:
         raise ValueError("Feature vectors must have the same shape.")
 
-    # TODO: implement the Euclidean distance formula yourself with NumPy operations.
-    # Allowed: subtraction, squaring, sum, and sqrt.
-    # Not allowed: external metric/distance helpers from scipy, sklearn, cv2, etc.
-    pass
+    diff = featureA - featureB
+    return np.sqrt(np.sum(diff**2))

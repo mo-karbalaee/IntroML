@@ -1,8 +1,8 @@
-'''
+"""
 Created on 20.06.2025
 
 @author: Linda Schneider
-'''
+"""
 
 import numpy as np
 import cv2
@@ -20,24 +20,30 @@ def simpleAlignment(img, size=128):
     if img is None:
         raise ValueError("Input image must not be None.")
 
-    # Step 1: Resize the input image to a fixed square size.
-    # Allowed: cv2.resize.
+    resized = cv2.resize(img, (size, size))
 
-    # Step 2: Binarize the resized image with Otsu thresholding.
-    # Allowed: cv2.threshold with Otsu.
+    _, binary = cv2.threshold(resized, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-    # Step 3: Find the bounding box of the foreground with NumPy only.
-    # Hint: The symbols are dark, the background is bright.
-    # Allowed: NumPy operations such as argwhere, min, max, slicing.
-    # Not allowed: cv2.findContours, connectedComponents, or similar high-level localization helpers.
+    foreground_pixels = np.argwhere(binary > 0)
 
-    # Step 4: Crop the grayscale region of interest from the resized image.
-    # Use NumPy slicing.
+    if foreground_pixels.size == 0:
+        return np.zeros((size, size), dtype=np.uint8)
 
-    # Step 5: Resize the cropped region such that it fits into half the canvas.
-    # Allowed: cv2.resize.
+    r_min, c_min = foreground_pixels.min(axis=0)
+    r_max, c_max = foreground_pixels.max(axis=0)
 
-    # Step 6: Place the resized symbol in the center of a blank canvas.
-    # Use NumPy indexing and array assignment for centering.
+    cropped = resized[r_min : r_max + 1, c_min : c_max + 1]
 
-    pass
+    target = size // 2
+    h, w = cropped.shape
+    scale = target / max(h, w)
+    new_h = int(h * scale)
+    new_w = int(w * scale)
+    symbol = cv2.resize(cropped, (new_w, new_h))
+
+    canvas = np.zeros((size, size), dtype=np.uint8)
+    r_start = (size - new_h) // 2
+    c_start = (size - new_w) // 2
+    canvas[r_start : r_start + new_h, c_start : c_start + new_w] = symbol
+
+    return canvas
