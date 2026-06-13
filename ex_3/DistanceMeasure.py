@@ -16,8 +16,14 @@ def mseDistance(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise ValueError("Images must have the same shape.")
 
-    diff = imgA.astype(np.float32) - imgB.astype(np.float32)
-    return np.mean(diff**2)
+    image_a = imgA.astype(np.float32)
+    image_b = imgB.astype(np.float32)
+
+    difference = image_a - image_b
+    squared_difference = difference**2
+    mean_squared_error = np.mean(squared_difference)
+
+    return mean_squared_error
 
 
 def euclideanDistance(featureA, featureB):
@@ -27,5 +33,9 @@ def euclideanDistance(featureA, featureB):
     if featureA.shape != featureB.shape:
         raise ValueError("Feature vectors must have the same shape.")
 
-    diff = featureA - featureB
-    return np.sqrt(np.sum(diff**2))
+    difference = featureA - featureB
+    squared_difference = difference**2
+    sum_of_squares = np.sum(squared_difference)
+    euclidean_distance = np.sqrt(sum_of_squares)
+
+    return euclidean_distance
