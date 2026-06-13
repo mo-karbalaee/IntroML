@@ -13,6 +13,48 @@ import cv2
 # Do not use contour detection or connected components here.
 
 
+def _toGrayscale(img):
+    if len(img.shape) == 3:
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return img
+
+
+def _binarize(img):
+    _, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    return binary
+
+
+def _boundingBox(binary):
+    foreground_pixels = np.argwhere(binary > 0)
+    if foreground_pixels.size == 0:
+        return None
+    min_coords = foreground_pixels.min(axis=0)
+    max_coords = foreground_pixels.max(axis=0)
+    return min_coords[0], min_coords[1], max_coords[0], max_coords[1]
+
+
+def _cropSymbol(img, bbox):
+    min_row, min_col, max_row, max_col = bbox
+    return img[min_row : max_row + 1, min_col : max_col + 1]
+
+
+def _scaleToTarget(symbol, target_size):
+    h, w = symbol.shape
+    scale = target_size / max(h, w)
+    new_h = int(h * scale)
+    new_w = int(w * scale)
+    return cv2.resize(symbol, (new_w, new_h))
+
+
+def _placeOnCanvas(symbol, size):
+    canvas = np.zeros((size, size), dtype=np.uint8)
+    h, w = symbol.shape
+    row_start = (size - h) // 2
+    col_start = (size - w) // 2
+    canvas[row_start : row_start + h, col_start : col_start + w] = symbol
+    return canvas
+
+
 def simpleAlignment(img, size=128):
     """
     Align a grayscale symbol by centering its foreground on a fixed canvas.
@@ -20,55 +62,14 @@ def simpleAlignment(img, size=128):
     if img is None:
         raise ValueError("Input image must not be None.")
 
-    if len(img.shape) == 3:
-        grayscale_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    else:
-        grayscale_image = img
+    grayscale = _toGrayscale(img)
+    resized = cv2.resize(grayscale, (size, size))
+    binary = _binarize(resized)
 
-    resized_image = cv2.resize(grayscale_image, (size, size))
+    bbox = _boundingBox(binary)
+    if bbox is None:
+        return np.zeros((size, size), dtype=np.uint8)
 
-    _, binary_image = cv2.threshold(
-        resized_image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
-    )
-
-    foreground_pixels = np.argwhere(binary_image > 0)
-
-    if foreground_pixels.size == 0:
-        empty_canvas = np.zeros((size, size), dtype=np.uint8)
-        return empty_canvas
-
-    minimum_coordinates = foreground_pixels.min(axis=0)
-    maximum_coordinates = foreground_pixels.max(axis=0)
-
-    minimum_row = minimum_coordinates[0]
-    minimum_column = minimum_coordinates[1]
-    maximum_row = maximum_coordinates[0]
-    maximum_column = maximum_coordinates[1]
-
-    cropped_symbol = resized_image[
-        minimum_row : maximum_row + 1, minimum_column : maximum_column + 1
-    ]
-
-    target_size = size * 7 // 8
-
-    symbol_height, symbol_width = cropped_symbol.shape
-    largest_dimension = max(symbol_height, symbol_width)
-
-    scale_factor = target_size / largest_dimension
-
-    new_height = int(symbol_height * scale_factor)
-    new_width = int(symbol_width * scale_factor)
-
-    resized_symbol = cv2.resize(cropped_symbol, (new_width, new_height))
-
-    aligned_image = np.zeros((size, size), dtype=np.uint8)
-
-    row_start = (size - new_height) // 2
-    column_start = (size - new_width) // 2
-
-    row_end = row_start + new_height
-    column_end = column_start + new_width
-
-    aligned_image[row_start:row_end, column_start:column_end] = resized_symbol
-
-    return aligned_image
+    cropped = _cropSymbol(resized, bbox)
+    scaled = _scaleToTarget(cropped, size * 7 // 8)
+    return _placeOnCanvas(scaled, size)
