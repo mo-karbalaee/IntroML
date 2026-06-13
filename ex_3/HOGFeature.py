@@ -23,15 +23,12 @@ def computeGradients(img):
     gy = cv2.Sobel(img_float, cv2.CV_32F, 0, 1, ksize=1)
 
     magnitude = np.sqrt(gx**2 + gy**2)
-    orientation = np.degrees(np.arctan2(np.abs(gy), gx)) % 180
+    orientation = np.degrees(np.arctan2(gy, gx)) % 180
 
     return magnitude, orientation
 
 
 def buildCellHistograms(magnitude, orientation, cell_size=8, num_bins=9):
-    """
-    Accumulate orientation histograms for each cell.
-    """
     if magnitude.shape != orientation.shape:
         raise ValueError("Magnitude and orientation must have the same shape.")
 
@@ -52,9 +49,20 @@ def buildCellHistograms(magnitude, orientation, cell_size=8, num_bins=9):
                 cy * cell_size : (cy + 1) * cell_size,
                 cx * cell_size : (cx + 1) * cell_size,
             ]
-            bin_indices = (cell_ori / bin_width).astype(int) % num_bins
+
+            bin_float = cell_ori / bin_width
+            bin_lower = np.floor(bin_float).astype(int) % num_bins
+            bin_upper = (bin_lower + 1) % num_bins
+            weight_upper = bin_float - np.floor(bin_float)
+            weight_lower = 1.0 - weight_upper
+
             for b in range(num_bins):
-                histograms[cy, cx, b] = cell_mag[bin_indices == b].sum()
+                histograms[cy, cx, b] += (
+                    cell_mag * weight_lower * (bin_lower == b)
+                ).sum()
+                histograms[cy, cx, b] += (
+                    cell_mag * weight_upper * (bin_upper == b)
+                ).sum()
 
     return histograms
 
@@ -74,8 +82,11 @@ def calculateHOG(img, cell_size=8, block_size=2, num_bins=9, eps=1e-6):
 
     for by in range(n_blocks_y):
         for bx in range(n_blocks_x):
-            block = histograms[by:by+block_size, bx:bx+block_size, :].flatten()
+            block = histograms[by : by + block_size, bx : bx + block_size, :].flatten()
             norm = np.sqrt(np.sum(block**2) + eps**2)
-            descriptor.append(block / norm)
+            block = block / norm
+            block = np.clip(block, 0, 0.2)
+            norm2 = np.sqrt(np.sum(block**2) + eps**2)
+            descriptor.append(block / norm2)
 
     return np.concatenate(descriptor)

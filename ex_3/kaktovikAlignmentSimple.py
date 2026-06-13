@@ -12,13 +12,15 @@ import cv2
 # Use NumPy for the bounding box computation and for centering the symbol.
 # Do not use contour detection or connected components here.
 
-
 def simpleAlignment(img, size=128):
     """
     Align a grayscale symbol by centering its foreground on a fixed canvas.
     """
     if img is None:
         raise ValueError("Input image must not be None.")
+
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     resized = cv2.resize(img, (size, size))
 
@@ -32,9 +34,9 @@ def simpleAlignment(img, size=128):
     r_min, c_min = foreground_pixels.min(axis=0)
     r_max, c_max = foreground_pixels.max(axis=0)
 
-    cropped = resized[r_min : r_max + 1, c_min : c_max + 1]
+    cropped = resized[r_min:r_max+1, c_min:c_max+1]
 
-    target = size // 2
+    target = size * 7 // 8
     h, w = cropped.shape
     scale = target / max(h, w)
     new_h = int(h * scale)
@@ -44,6 +46,6 @@ def simpleAlignment(img, size=128):
     canvas = np.zeros((size, size), dtype=np.uint8)
     r_start = (size - new_h) // 2
     c_start = (size - new_w) // 2
-    canvas[r_start : r_start + new_h, c_start : c_start + new_w] = symbol
+    canvas[r_start:r_start+new_h, c_start:c_start+new_w] = symbol
 
     return canvas
