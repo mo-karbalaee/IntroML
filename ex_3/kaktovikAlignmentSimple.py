@@ -61,11 +61,51 @@ crop the symbol to that bounding box!
 """
 def _boundingBox(binary):
     """
+    np.argwhere returns the coordinates of all non-zero elements in the binary image.
+    Which means, the position of the pixels of the symbol. foreground_pixels is a list
+    of tuples where each tuple contains the coordinates of a non-zero pixel.
+    # Example input:
+
+    a = np.array([
+        [0, 1, 0],
+        [1, 1, 0],
+        [0, 0, 1]
+    ])
+
+    np.argwhere(a)
+
+    # Example output:
     
+    [[0 1]
+    [1 0]
+    [1 1]
+    [2 2]]
     """
+
     foreground_pixels = np.argwhere(binary > 0)
     if foreground_pixels.size == 0:
+        """
+        When the list is empty, it means that there is no symbol in the image,
+        hence, there will be no bounding box and we return None here. 
+        """
         return None
+    """
+    Here is a little tricky and the most important thing is to understand what axis=0 means.
+    First see an example:
+    
+    [[ 2,  5],
+    [ 3,  8],
+    [ 4,  3],
+    [ 6,  9]]
+        ↓ min down each column
+    [2,  3]
+    
+    This operation is called collapsing which in simple term is defined as squishing a set of 
+    elements into one element. That is what we did now. We squished a list of tuples into one single
+    tuple, but how? 
+    
+    So .min(axis=0) asks: "for each column position, what is the minimum value across all rows?"
+    """
     min_coords = foreground_pixels.min(axis=0)
     max_coords = foreground_pixels.max(axis=0)
     return min_coords[0], min_coords[1], max_coords[0], max_coords[1]
@@ -112,6 +152,16 @@ def simpleAlignment(img, size=128):
     resized = cv2.resize(grayscale, (size, size))
     binary = _binarize(resized)
 
+    """
+    Here bbox is tuple of 4 elements. (min_row, min_col, max_row, max_col)
+            min_col      max_col
+                ↓            ↓
+    min_row →   ┌────────────┐
+                │            │
+                │   symbol   │
+                │            │
+    max_row →   └────────────┘
+    """
     bbox = _boundingBox(binary)
     if bbox is None:
         """
