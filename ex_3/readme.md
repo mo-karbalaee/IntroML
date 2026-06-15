@@ -1,1 +1,1 @@
-<iframe width="560" height="315" src="https://www.youtube.com/embed/RaaGoB8XnxM?si=8wyzgR0Sg7qEupKU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Watch on YouTube](https://img.youtube.com/vi/RaaGoB8XnxM/hqdefault.jpg)]  [oai_citation:0‡youtube.com](https://www.youtube.com/watch?v=RaaGoB8XnxM&utm_source=chatgpt.com)
