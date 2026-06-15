@@ -115,6 +115,11 @@ Gets the bounding box coordinates and returns the cropped image resulting
 into a clean box that contains the symbol. 
 """
 def _cropSymbol(img, bbox):
+    """
+    Unpacking the tuple into respective elements and then perform the cropping using
+    array slicing. The reason we add 1 in the end indices is because Python slicing is exclusive on the right end.
+    Simply put, img[a:b] is like [a,b) in math.  
+    """
     min_row, min_col, max_row, max_col = bbox
     return img[min_row : max_row + 1, min_col : max_col + 1]
 
