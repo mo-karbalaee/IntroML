@@ -123,18 +123,40 @@ def _cropSymbol(img, bbox):
     min_row, min_col, max_row, max_col = bbox
     return img[min_row : max_row + 1, min_col : max_col + 1]
 
-
+"""
+After cropping, the image we have can be of any size so we will still have those MSE and HOG related issues
+if we just place the symbol on the canvas as is. Therefore, the cropped symbol is rescaled. 
+"""
 def _scaleToTarget(symbol, target_size):
+    """
+    Here you might ask why we are not resizing to the target size directly and why isn't this function
+    just a one-line function. The reason is that we want to preserve the aspect ratio of the image as well 
+    and a simple resize without any consideration can distort the image. 
+    """
     h, w = symbol.shape
+    """
+    The reason we are dividing by the longer dimension rather than the shorter one is that we want the longer
+    one to fit in the target size too. Otherwise, the shorter will fit but the longer will overflow. 
+    """
     scale = target_size / max(h, w)
     new_h = int(h * scale)
     new_w = int(w * scale)
     return cv2.resize(symbol, (new_w, new_h))
 
-
+"""
+Now that we have the symbol in the desired shape and size and characteristics, 
+it's time to put the image on a canvas. We need a canvas because the symbol might not be a 
+perfect square so in order to have a standard and fixed image size across the dataset, we should put a canvas
+which embodies the symbol and fills the rest of the image with black pixels. 
+"""
 def _placeOnCanvas(symbol, size):
     canvas = np.zeros((size, size), dtype=np.uint8)
     h, w = symbol.shape
+    """
+    These two lines compute how much empty space should be left horizontally and vertically. We divide it
+    by 2 because we have two horizontal edges and two vertical ones right? 
+    After that, we just put the symbol right in the center of the canvas by using array slicing. 
+    """
     row_start = (size - h) // 2
     col_start = (size - w) // 2
     canvas[row_start : row_start + h, col_start : col_start + w] = symbol
@@ -176,5 +198,9 @@ def simpleAlignment(img, size=128):
         return np.zeros((size, size), dtype=np.uint8)
 
     cropped = _cropSymbol(resized, bbox)
+    """
+    The argument we are passing here mean that our target is that the symbol
+    covers 7 / 8 of the canvas which means that the rest of the canvas will be empty pixels. 
+    """
     scaled = _scaleToTarget(cropped, size * 7 // 8)
     return _placeOnCanvas(scaled, size)
