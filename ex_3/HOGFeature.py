@@ -115,20 +115,56 @@ def _extractBlocks(cell_histograms, block_size):
                 :,
             ]
 
+"""
+Compute a dense HOG descriptor with overlapping, normalized blocks.
+Dense refers to the fact that HOG is calculated for all the cells because there are
+some methods that only work on specific cells. An overlapping normalized block is like
+a kernel that slides across the pixels of a cell and normalizes the values under that block. 
+As a reminder, normalization is the process of making a bunch of values add up to one. In other words, scaling
+some values to fit within a specific range. It is called overlapping because during the sliding, 
+blocks have shared pixels, hence they overlap. This overlapping feature is good for the robustness of the final
+descriptor because each block gets normalized multiple times and this makes the descriptor more robust compared
+to just performing the normalization once per cell. 
 
+# Args
+1. The raw image. 
+2. The size of the cells. For example, the image will be divided into cells of 8 * 8 size. Not the number of cells!
+3. The size of the square sliding block within each cell. 
+4. Number of histogram bins of the orientations. 
+5. The eps is a small value to prevent division by zero in the normalization process. 
+
+For example, an image of size 128, will get 128 / 8 = 16 cells per row hence 16 * 16 cells in total. 
+"""
 def calculateHOG(img, cell_size=8, block_size=2, num_bins=9, eps=1e-6):
     """
-    Compute a dense HOG descriptor with overlapping, normalized blocks.
+    First we calculate the magnitude and orientation gradients which are the base values for doing HOG.
+    The name speaks for itself. Histogram of Gradients. In order to make a histogram out of gradients with 
+    a special algorithm, we first need to have the gradients. That's what's happening here. As a quick reminder, 
+    gradients are nothing but measurements for how much brightness changes. The idea is that edges are nothing, but
+    relatively fast brightness changes across an image. 
     """
     gradient_magnitude, gradient_orientation = computeGradients(img)
 
+
+    """
+    For each cell we calculate the histogram. 
+    """
     cell_histograms = buildCellHistograms(
         gradient_magnitude, gradient_orientation, cell_size, num_bins
     )
-
+    
+    
+    """
+    Within each cell we extract the blocks and apply normalization to it. This gives us a list of 
+    descriptor blocks. 
+    """
     descriptor_blocks = [
         _normalizeBlock(block, eps)
         for block in _extractBlocks(cell_histograms, block_size)
     ]
 
+    """
+    The final feature descriptor is nothing but the concatenation of each cell's feature descriptor.
+    Concatenation is the process of putting lists back to back. Nothing fancy here. 
+    """
     return np.concatenate(descriptor_blocks)
