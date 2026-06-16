@@ -12,151 +12,45 @@ import cv2
 # Use NumPy for the bounding box computation and for centering the symbol.
 # Do not use contour detection or connected components here.
 
-"""
-Converts the image to grayscale just in case.
-We do this because for achieving a feature descriptor of the symbol, 
-we only need the brightness values and dealing with three channels is not 
-necessary for this task which is preprocessing for a classification task. 
-"""
+
 def _toGrayscale(img):
     if len(img.shape) == 3:
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return img
 
 
-"""
-We need to binarize the image because our goal is to distinguish the symbol 
-inside each image and doing this is much easier with a binary image because 
-the background will be removed and we only get the clean black pixels of the 
-symbol itself. 
-"""
 def _binarize(img):
-    """
-    # Args
-    1. The image
-    2. The threshold which gets ignored here because we are sending the otsu flags
-    3. The maximum pixel value. 
-    4. The flags. Two flags have been passed. THRESH_OTSU specifies the thresholding 
-        algorithm for binarization. THRESH_BINARY_INV flag is about how we decide 
-        pixel values. This flag says, anything below the threshold should become white. 
-        That's the inverse part. The binary part specifies that the decision is a simple if 
-        statement because there are more complex ways of doing this as well. We make the symbol
-        pixels white because many techniques actually care for non-zero values not zero values
-        so dealing with zero values is not a common practice in image processing so we invert the 
-        image during the binarization. 
-    """
+
     _, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    """
-    OpenCV's thresholding function returns two values, the threshold value that it 
-    computed during the Otsu thresholding, remember ex1?, and the binarized image itself.
-    Since we don't need the threshold value here, so after unpacking the function we 
-    threw away the threshold itself and only stored the binarized image. 
-    """
     return binary
 
-"""
-The bounding box is the smallest rectangle that we can fit the symbol in. 
-This methods calculates and returns the 4 vertices of that rectangle, but does not
-crop the symbol to that bounding box!
-"""
+
 def _boundingBox(binary):
-    """
-    np.argwhere returns the coordinates of all non-zero elements in the binary image.
-    Which means, the position of the pixels of the symbol. foreground_pixels is a list
-    of tuples where each tuple contains the coordinates of a non-zero pixel.
-    # Example input:
-
-    a = np.array([
-        [0, 1, 0],
-        [1, 1, 0],
-        [0, 0, 1]
-    ])
-
-    np.argwhere(a)
-
-    # Example output:
-    
-    [[0 1]
-    [1 0]
-    [1 1]
-    [2 2]]
-    """
 
     foreground_pixels = np.argwhere(binary > 0)
     if foreground_pixels.size == 0:
-        """
-        When the list is empty, it means that there is no symbol in the image,
-        hence, there will be no bounding box and we return None here. 
-        """
         return None
-    """
-    Here is a little tricky and the most important thing is to understand what axis=0 means.
-    First see an example:
-    
-    [[ 2,  5],
-    [ 3,  8],
-    [ 4,  3],
-    [ 6,  9]]
-        ↓ min down each column
-    [2,  3]
-    
-    This operation is called collapsing which in simple term is defined as squishing a set of 
-    elements into one element. That is what we did now. We squished a list of tuples into one single
-    tuple, but how? 
-    
-    So .min(axis=0) asks: "for each column position, what is the minimum value across all rows?"
-    """
     min_coords = foreground_pixels.min(axis=0)
     max_coords = foreground_pixels.max(axis=0)
     return min_coords[0], min_coords[1], max_coords[0], max_coords[1]
 
-"""
-Gets the bounding box coordinates and returns the cropped image resulting
-into a clean box that contains the symbol. 
-"""
+
 def _cropSymbol(img, bbox):
-    """
-    Unpacking the tuple into respective elements and then perform the cropping using
-    array slicing. The reason we add 1 in the end indices is because Python slicing is exclusive on the right end.
-    Simply put, img[a:b] is like [a,b) in math.  
-    """
     min_row, min_col, max_row, max_col = bbox
     return img[min_row : max_row + 1, min_col : max_col + 1]
 
-"""
-After cropping, the image we have can be of any size so we will still have those MSE and HOG related issues
-if we just place the symbol on the canvas as is. Therefore, the cropped symbol is rescaled. 
-"""
+
 def _scaleToTarget(symbol, target_size):
-    """
-    Here you might ask why we are not resizing to the target size directly and why isn't this function
-    just a one-line function. The reason is that we want to preserve the aspect ratio of the image as well 
-    and a simple resize without any consideration can distort the image. 
-    """
     h, w = symbol.shape
-    """
-    The reason we are dividing by the longer dimension rather than the shorter one is that we want the longer
-    one to fit in the target size too. Otherwise, the shorter will fit but the longer will overflow. 
-    """
     scale = target_size / max(h, w)
     new_h = int(h * scale)
     new_w = int(w * scale)
     return cv2.resize(symbol, (new_w, new_h))
 
-"""
-Now that we have the symbol in the desired shape and size and characteristics, 
-it's time to put the image on a canvas. We need a canvas because the symbol might not be a 
-perfect square so in order to have a standard and fixed image size across the dataset, we should put a canvas
-which embodies the symbol and fills the rest of the image with black pixels. 
-"""
+
 def _placeOnCanvas(symbol, size):
     canvas = np.zeros((size, size), dtype=np.uint8)
     h, w = symbol.shape
-    """
-    These two lines compute how much empty space should be left horizontally and vertically. We divide it
-    by 2 because we have two horizontal edges and two vertical ones right? 
-    After that, we just put the symbol right in the center of the canvas by using array slicing. 
-    """
     row_start = (size - h) // 2
     col_start = (size - w) // 2
     canvas[row_start : row_start + h, col_start : col_start + w] = symbol
@@ -171,36 +65,13 @@ def simpleAlignment(img, size=128):
         raise ValueError("Input image must not be None.")
 
     grayscale = _toGrayscale(img)
-    """
-    We resize all the images to a fixed size because we need all of them to 
-    cover up the exact same part of the canvas and since the images of the 
-    dataset come in different resolutions, this would not be possible without resizing. 
-    """
     resized = cv2.resize(grayscale, (size, size))
     binary = _binarize(resized)
 
-    """
-    Here bbox is tuple of 4 elements. (min_row, min_col, max_row, max_col)
-            min_col      max_col
-                ↓            ↓
-    min_row →   ┌────────────┐
-                │            │
-                │   symbol   │
-                │            │
-    max_row →   └────────────┘
-    """
     bbox = _boundingBox(binary)
     if bbox is None:
-        """
-        In case there is no symbol in the image, the bounding box function will return None,
-        hence here we check for it and return a completely black image in that case. 
-        """
         return np.zeros((size, size), dtype=np.uint8)
 
     cropped = _cropSymbol(resized, bbox)
-    """
-    The argument we are passing here mean that our target is that the symbol
-    covers 7 / 8 of the canvas which means that the rest of the canvas will be empty pixels. 
-    """
     scaled = _scaleToTarget(cropped, size * 7 // 8)
     return _placeOnCanvas(scaled, size)
