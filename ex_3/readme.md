@@ -1,1 +1,1 @@
-[![Watch on YouTube](https://img.youtube.com/vi/RaaGoB8XnxM/hqdefault.jpg)]  [oai_citation:0‡youtube.com](https://www.youtube.com/watch?v=RaaGoB8XnxM&utm_source=chatgpt.com)
+[HOG Youtube Video](https://www.youtube.com/watch?v=RaaGoB8XnxM&utm_source=chatgpt.com)
