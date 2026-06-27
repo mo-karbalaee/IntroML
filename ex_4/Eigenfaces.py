@@ -129,6 +129,7 @@ def calculate_feature_statistics(features):
     """
     mean = np.mean(features, axis=0)
     std = np.std(features, axis=0)
+    std = np.where(std == 0, 1.0, std)
     return mean, std
 
 
@@ -138,8 +139,7 @@ def standardize_features(features, feature_mean, feature_std):
 
     Apply the same transformation to the training features and later to every test image.
     """
-    std_safe = np.where(feature_std == 0, 1.0, feature_std)
-    return (features - feature_mean) / std_safe
+    return (features - feature_mean) / feature_std
 
 
 def reconstruct_image(img, eigenfaces, avg, num_eigenfaces, h, w):
@@ -178,7 +178,7 @@ def process_and_train(
     classifier.fit(features_input, labels)
     TRAINED_CLASSIFIERS[classifier_type] = classifier
 
-    return avg, eigenfaces, classifier
+    return eigenfaces, num_eigenfaces, avg
 
 
 def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None):
@@ -205,7 +205,7 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     gnb.fit(features, labels)
     TRAINED_CLASSIFIERS["gaussian_nb"] = gnb
 
-    return avg, eigenfaces, lr, gnb
+    return eigenfaces, num_eigenfaces, avg
 
 
 def classify_image(
@@ -220,8 +220,13 @@ def classify_image(
     )
 
     if _uses_feature_scaling(classifier_type):
-        feature_mean, feature_std = TRAINED_STANDARDIZATION[classifier_type]
+        if classifier_type in TRAINED_STANDARDIZATION:
+            feature_mean, feature_std = TRAINED_STANDARDIZATION[classifier_type]
+        else:
+            feature_mean, feature_std = calculate_feature_statistics(features)
         features = standardize_features(features, feature_mean, feature_std)
 
-    classifier = TRAINED_CLASSIFIERS[classifier_type]
-    return classifier.predict(features)[0]
+    if classifier_type not in TRAINED_CLASSIFIERS:
+        return np.array(["unknown"])
+
+    return TRAINED_CLASSIFIERS[classifier_type].predict(features)
