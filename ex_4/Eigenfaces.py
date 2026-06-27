@@ -5,12 +5,10 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 
-
 N = 64
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 TRAINED_CLASSIFIERS = {}
 TRAINED_STANDARDIZATION = {}
-
 # Do not add further imports.
 # Implement PCA and feature standardization with NumPy only.
 # Do not use sklearn.decomposition.PCA or other pre-built standardization helpers.
@@ -64,10 +62,14 @@ def create_database_from_folder(dataset_root, image_size=(N, N)):
 
     for class_dir in class_dirs:
         image_paths = [
-            path for path in sorted(class_dir.iterdir()) if path.suffix.lower() in SUPPORTED_EXTENSIONS
+            path
+            for path in sorted(class_dir.iterdir())
+            if path.suffix.lower() in SUPPORTED_EXTENSIONS
         ]
         if not image_paths:
-            raise ValueError(f"Class directory contains no supported images: {class_dir}")
+            raise ValueError(
+                f"Class directory contains no supported images: {class_dir}"
+            )
 
         for image_path in image_paths:
             img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
@@ -98,21 +100,24 @@ def calculate_average_face(train):
     """
     Calculate the average image using all training images.
     """
-    raise NotImplementedError("Implement calculate_average_face().")
+    return np.mean(train, axis=0)
 
 
 def calculate_eigenfaces(train, avg, num_eigenfaces):
     """
     Calculate the principal directions of the centered training set using SVD.
     """
-    raise NotImplementedError("Implement calculate_eigenfaces().")
+    centered = train - avg
+    U, S, Vt = np.linalg.svd(centered, full_matrices=False)
+    return Vt[:num_eigenfaces]
 
 
 def get_feature_representation(images, eigenfaces, avg, num_eigenfaces):
     """
     Project all images into the PCA space spanned by the first num_eigenfaces components.
     """
-    raise NotImplementedError("Implement get_feature_representation().")
+    centered = images - avg
+    return centered @ eigenfaces[:num_eigenfaces].T
 
 
 def calculate_feature_statistics(features):
@@ -122,7 +127,9 @@ def calculate_feature_statistics(features):
     Standardize every feature by centering it to zero mean
     and rescaling it to unit standard deviation. Implement this with NumPy only.
     """
-    raise NotImplementedError("Implement calculate_feature_statistics().")
+    mean = np.mean(features, axis=0)
+    std = np.std(features, axis=0)
+    return mean, std
 
 
 def standardize_features(features, feature_mean, feature_std):
@@ -131,22 +138,47 @@ def standardize_features(features, feature_mean, feature_std):
 
     Apply the same transformation to the training features and later to every test image.
     """
-    raise NotImplementedError("Implement standardize_features().")
+    std_safe = np.where(feature_std == 0, 1.0, feature_std)
+    return (features - feature_mean) / std_safe
 
 
 def reconstruct_image(img, eigenfaces, avg, num_eigenfaces, h, w):
     """
     Reconstruct an image from the first num_eigenfaces principal components.
     """
-    raise NotImplementedError("Implement reconstruct_image().")
+    centered = img - avg
+    coeffs = centered @ eigenfaces[:num_eigenfaces].T
+    reconstructed = avg + coeffs @ eigenfaces[:num_eigenfaces]
+    return reconstructed.reshape(h, w)
 
 
-def process_and_train(labels, train, num_images, h, w, classifier_type="logistic", num_eigenfaces=None):
+def process_and_train(
+    labels, train, num_images, h, w, classifier_type="logistic", num_eigenfaces=None
+):
     """
     Compute PCA features and train one classifier on top of them.
     For Logistic Regression, standardize the PCA features with your own helper functions.
     """
-    raise NotImplementedError("Implement process_and_train().")
+    if num_eigenfaces is None:
+        num_eigenfaces = min(num_images, h * w)
+
+    avg = calculate_average_face(train)
+    eigenfaces = calculate_eigenfaces(train, avg, num_eigenfaces)
+    features = get_feature_representation(train, eigenfaces, avg, num_eigenfaces)
+
+    classifier = _build_classifier(classifier_type)
+
+    if _uses_feature_scaling(classifier_type):
+        feature_mean, feature_std = calculate_feature_statistics(features)
+        features_input = standardize_features(features, feature_mean, feature_std)
+        TRAINED_STANDARDIZATION[classifier_type] = (feature_mean, feature_std)
+    else:
+        features_input = features
+
+    classifier.fit(features_input, labels)
+    TRAINED_CLASSIFIERS[classifier_type] = classifier
+
+    return avg, eigenfaces, classifier
 
 
 def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None):
@@ -154,12 +186,42 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     Train Logistic Regression and Gaussian Naive Bayes on the same PCA features.
     For Logistic Regression, standardize the PCA features with your own helper functions.
     """
-    raise NotImplementedError("Implement train_both_classifiers() after process_and_train().")
+    if num_eigenfaces is None:
+        num_eigenfaces = min(num_images, h * w)
+
+    avg = calculate_average_face(train)
+    eigenfaces = calculate_eigenfaces(train, avg, num_eigenfaces)
+    features = get_feature_representation(train, eigenfaces, avg, num_eigenfaces)
+
+    feature_mean, feature_std = calculate_feature_statistics(features)
+    features_standardized = standardize_features(features, feature_mean, feature_std)
+    TRAINED_STANDARDIZATION["logistic"] = (feature_mean, feature_std)
+
+    lr = _build_classifier("logistic")
+    lr.fit(features_standardized, labels)
+    TRAINED_CLASSIFIERS["logistic"] = lr
+
+    gnb = _build_classifier("gaussian_nb")
+    gnb.fit(features, labels)
+    TRAINED_CLASSIFIERS["gaussian_nb"] = gnb
+
+    return avg, eigenfaces, lr, gnb
 
 
-def classify_image(img, eigenfaces, avg, num_eigenfaces, h, w, classifier_type="logistic"):
+def classify_image(
+    img, eigenfaces, avg, num_eigenfaces, h, w, classifier_type="logistic"
+):
     """
     Predict the class label of one image from its PCA coefficients.
     If Logistic Regression is used, apply the same feature standardization as during training.
     """
-    raise NotImplementedError("Implement classify_image().")
+    features = get_feature_representation(
+        img.reshape(1, -1), eigenfaces, avg, num_eigenfaces
+    )
+
+    if _uses_feature_scaling(classifier_type):
+        feature_mean, feature_std = TRAINED_STANDARDIZATION[classifier_type]
+        features = standardize_features(features, feature_mean, feature_std)
+
+    classifier = TRAINED_CLASSIFIERS[classifier_type]
+    return classifier.predict(features)[0]
