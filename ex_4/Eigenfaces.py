@@ -99,6 +99,11 @@ def create_database_from_folder(dataset_root, image_size=(N, N)):
 def calculate_average_face(train):
     """
     Calculate the average image using all training images.
+    We need this method because PCA works on centered data which means that
+    the average faces will be deducted from the training batch.
+    The output of this function is a 1D vector of average pixels. Which means that
+    the following line will calculate the average pixel intensity for the pixels on the
+    same position across the training set. 
     """
     return np.mean(train, axis=0)
 
