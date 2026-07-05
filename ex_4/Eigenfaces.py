@@ -190,8 +190,22 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     """
     Train Logistic Regression and Gaussian Naive Bayes on the same PCA features.
     For Logistic Regression, standardize the PCA features with your own helper functions.
+    # Inputs
+    labels: A numpy array containing the labels for each image in the training set.
+    train: The training set. It's a matrix where each row of it is a flattened image of size h * W.
+            The labels and and train are matched element-wise. So the first item in the labels is the
+            label for the first row (image) in train.
+    num_images: Number of images in the training set. This parameter is redundant because it could be
+                easily calculated inside the function using train.shape[0]
+    h: height of the images in the training set. 
+    w: width of the images in the training set. 
+    num_eigenfaces: The number of principal components to keep per image.             
     """
+
     if num_eigenfaces is None:
+        """
+        Why? there is linear algebra behind it. 
+        """
         num_eigenfaces = min(num_images, h * w)
 
     avg = calculate_average_face(train)
