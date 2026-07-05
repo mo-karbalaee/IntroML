@@ -34,23 +34,20 @@ Flatten every image into a vector.
 
 If an image is
 
-$$\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}$$
+```
+1  2
+3  4
+```
 
 it becomes
 
 $$[1, 2, 3, 4]$$
 
-If you have $n$ images, stack them:
+If you have $n$ images, stack them into a matrix where each row is one flattened image:
 
-$$
-X =
-\begin{bmatrix}
-- & x_1^T & - \\
-- & x_2^T & - \\
- & \vdots & \\
-- & x_n^T & -
-\end{bmatrix}
-$$
+```
+X = [x_1^T; x_2^T; ...; x_n^T]
+```
 
 where $X \in \mathbb{R}^{n \times d}$.
 
@@ -190,38 +187,18 @@ If $k$ is much smaller than $d$, the reconstruction won't be perfect, but it oft
 
 You can think of PCA as the following pipeline:
 
-```
-Images
-   │
-   ▼
-Flatten each image
-   │
-   ▼
-Data matrix X
-   │
-   ▼
-Subtract the mean
-   │
-   ▼
-Centered data Xc
-   │
-   ▼
-Covariance matrix
-   │
-   ▼
-Eigenvectors + Eigenvalues
-   │
-   ▼
-Sort by eigenvalue
-   │
-   ▼
-Keep top k eigenvectors
-   │
-   ▼
-Project data
-   │
-   ▼
-Compressed representation (k numbers per image)
+```mermaid
+flowchart TD
+    A[Images] --> B[Flatten each image]
+    B --> C[Data matrix X]
+    C --> D[Subtract the mean]
+    D --> E[Centered data Xc]
+    E --> F[Covariance matrix]
+    F --> G[Eigenvectors and Eigenvalues]
+    G --> H[Sort by eigenvalue]
+    H --> I[Keep top k eigenvectors]
+    I --> J[Project data]
+    J --> K[Compressed representation - k numbers per image]
 ```
 
 ## Intuition in One Sentence
