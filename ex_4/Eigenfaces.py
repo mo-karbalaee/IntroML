@@ -204,8 +204,21 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
 
     if num_eigenfaces is None:
         """
-        Why? there is linear algebra behind it. 
+        PCA cannot produce more principal components than the number of independent
+        directions in the data (i.e., the rank of the centered data matrix).
+        The tank of a matrix is the number of independent columns or row in it.
+        A matrix is said to be full rank when all of its rows or columns are
+        independent. This means, that a column cannot be created by a linear
+        combination of other columns. This means, all of the columns in this data
+        have new information. So the rank of a matrix is the number of its important
+        columns. The rest is trash. You can remove it and live the rest. And generate
+        the whole thing using your independent columns. You just need to combine them.
+        Our train data is of shape (num_images, h * w) and the rank of this matrix.
+        Cannot be bigger than min(num_images, h * w). Clearly. right?
+        So rank(train) = min(num_images, h * w) at most. That is the higher bound. 
+        Under the assumption that the train matrix is full-rank. 
         """
+
         num_eigenfaces = min(num_images, h * w)
 
     avg = calculate_average_face(train)
