@@ -104,6 +104,18 @@ def calculate_average_face(train):
     The output of this function is a 1D vector of average pixels. Which means that
     the following line will calculate the average pixel intensity for the pixels on the
     same position across the training set. 
+    
+    The output is of shape (d, ) where d is h * w. It makes sense that the average image is 
+    of the same shape as the rest of the images in the dataset right? 
+    axis=0 means, go down each column for all rows and calculate the average of that. 
+    For example: 
+    [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12]
+    ]
+    
+    The output = [(1 + 2 + 3) / 3, (2 + 6 + 10) / 3, ....., ]
     """
     return np.mean(train, axis=0)
 
@@ -188,6 +200,17 @@ def process_and_train(
 
 def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None):
     """
+    Training set:
+    [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12]
+    ]
+    
+    labels: [Yale1, Yale10, Yale4]
+    """
+
+    """
     Train Logistic Regression and Gaussian Naive Bayes on the same PCA features.
     For Logistic Regression, standardize the PCA features with your own helper functions.
     # Inputs
@@ -218,9 +241,18 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
         So rank(train) = min(num_images, h * w) at most. That is the higher bound. 
         Under the assumption that the train matrix is full-rank. 
         """
-
         num_eigenfaces = min(num_images, h * w)
 
+    """
+    Since we are only concerned with the variations in our dataset, we need to 
+    calculate the average of our dataset and subtract it from the training set. That's
+    done in PCA. The reason we do this is that it makes our training set zero-centered which
+    actually allows the PCA to lean the variations. How? because if we don't subtract the mean,
+    Then the first principal component will point to the direction of the mean training data. 
+    Which is not important for us. We want PC-reduced images to contain key information about
+    themselves not the entire dataset. That actually makes it more difficult for our classifier
+    to differentiate between different images. Makes sense right?
+    """
     avg = calculate_average_face(train)
     eigenfaces = calculate_eigenfaces(train, avg, num_eigenfaces)
     features = get_feature_representation(train, eigenfaces, avg, num_eigenfaces)
