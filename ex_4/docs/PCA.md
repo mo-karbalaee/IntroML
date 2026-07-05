@@ -45,9 +45,15 @@ $$[1, 2, 3, 4]$$
 
 If you have $n$ images, stack them into a matrix where each row is one flattened image:
 
-```
-X = [x_1^T; x_2^T; ...; x_n^T]
-```
+$$
+X =
+\begin{bmatrix}
+x_1^T \\
+x_2^T \\
+\vdots \\
+x_n^T
+\end{bmatrix}
+$$
 
 where $X \in \mathbb{R}^{n \times d}$.
 
