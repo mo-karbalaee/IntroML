@@ -156,11 +156,18 @@ def calculate_feature_statistics(features):
 
     Standardize every feature by centering it to zero mean
     and rescaling it to unit standard deviation. Implement this with NumPy only.
+    axis=0 means collapsing down the rows. 
     """
     mean = np.mean(features, axis=0)
     std = np.std(features, axis=0)
     """
-    What does where do here?
+    If std is 0, put 1 instead because in the z-score normalization that we perform in the 
+    next step, we are dividing by std and if there are zero values in it, we'll face division by 
+    zero exceptions. 
+    Why do we replace it by 1 though? not anything else?
+    That's because when std is zero, it means every value is equal to the mean of the vector. 
+    So when every value is already equal to the mean itself, we don't need to divide it by anything to 
+    standardize it. We just divide the whole thing by 1 which will leave it unchanged. 
     """
     std = np.where(std == 0, 1.0, std)
     return mean, std
