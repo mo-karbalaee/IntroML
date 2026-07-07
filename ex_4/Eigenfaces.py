@@ -144,7 +144,8 @@ def calculate_eigenfaces(train, avg, num_eigenfaces):
 def get_feature_representation(images, eigenfaces, avg, num_eigenfaces):
     """
     Project all images into the PCA space spanned by the first num_eigenfaces components.
-    How is this projection happening?
+    It is just doing the projection by taking the dot product with each vector. That's it. 
+    And you know the output of dot product is a scalar right?! cool.
     """
     centered = images - avg
     return centered @ eigenfaces[:num_eigenfaces].T
@@ -186,6 +187,10 @@ def standardize_features(features, feature_mean, feature_std):
 def reconstruct_image(img, eigenfaces, avg, num_eigenfaces, h, w):
     """
     Reconstruct an image from the first num_eigenfaces principal components.
+    This is just used in the main file for showing how images with principal 
+    components will look like. This is basically doing the reverse. 
+    It will most probably not even coming up in the explanation because we're not
+    explaining the main file and this is only used there. 
     """
     centered = img - avg
     coeffs = centered @ eigenfaces[:num_eigenfaces].T
