@@ -175,6 +175,7 @@ def process_and_train(
     """
     Compute PCA features and train one classifier on top of them.
     For Logistic Regression, standardize the PCA features with your own helper functions.
+    This functions is doing nothing new. Just trains only one classifier instead of both of them. 
     """
     if num_eigenfaces is None:
         num_eigenfaces = min(num_images, h * w)
@@ -273,7 +274,14 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     """
     features = get_feature_representation(train, eigenfaces, avg, num_eigenfaces)
 
+    """
+    Just calculating the mean and standard deviation of the features (our images described in terms of
+    principal components.) later on used for standardizing all those features. Nothing fancy. 
+    """
     feature_mean, feature_std = calculate_feature_statistics(features)
+    """
+    
+    """
     features_standardized = standardize_features(features, feature_mean, feature_std)
     TRAINED_STANDARDIZATION["logistic"] = (feature_mean, feature_std)
 
