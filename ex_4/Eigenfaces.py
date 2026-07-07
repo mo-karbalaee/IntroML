@@ -254,7 +254,23 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     to differentiate between different images. Makes sense right?
     """
     avg = calculate_average_face(train)
+    """
+    Here we calculate the principal components in the training set. Meaning, we detect different features
+    in the training set. We haven't described the images in our training set using those features yet. 
+    Think of it this way, in this step we only calculate features like Asian eyes or beard or long hair 
+    and things like this across the entire training set. That's it. For example, we say that the top two
+    prominent features of the images in this dataset is having a beard and having Asian eyes. 
+    """
     eigenfaces = calculate_eigenfaces(train, avg, num_eigenfaces)
+    """
+    Now that we know the prominent features in our dataset, it's time to see how much of those features
+    each of the images in our training set posses. This is the part that condenses our images from 
+    h * w dimensions down to num_eigenfaces dimensions. How? by projection. 
+    So each principal component is a vector and here each of our images are a vector too. 
+    By projecting each image to each of those principal components gives us one scalar per principal 
+    component. So if we have 50 principal components, we'll have 50 scalars. Each of them tells us
+    how much our image aligns with such feature. How much Asian eyes is in it. Or how much beard is in it. 
+    """
     features = get_feature_representation(train, eigenfaces, avg, num_eigenfaces)
 
     feature_mean, feature_std = calculate_feature_statistics(features)
@@ -262,6 +278,9 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     TRAINED_STANDARDIZATION["logistic"] = (feature_mean, feature_std)
 
     lr = _build_classifier("logistic")
+    """
+    What is the benefit of standardizing the features for logistic regression?
+    """
     lr.fit(features_standardized, labels)
     TRAINED_CLASSIFIERS["logistic"] = lr
 
