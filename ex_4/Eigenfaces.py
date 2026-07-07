@@ -128,6 +128,9 @@ def calculate_eigenfaces(train, avg, num_eigenfaces):
     Instead, we can do it with SVD. 
     """
     centered = train - avg
+    """
+    what is full_matrices?
+    """
     U, S, Vt = np.linalg.svd(centered, full_matrices=False)
     """
     We only need the first num_eigenfaces of principal components. Vt stores
@@ -141,6 +144,7 @@ def calculate_eigenfaces(train, avg, num_eigenfaces):
 def get_feature_representation(images, eigenfaces, avg, num_eigenfaces):
     """
     Project all images into the PCA space spanned by the first num_eigenfaces components.
+    How is this projection happening?
     """
     centered = images - avg
     return centered @ eigenfaces[:num_eigenfaces].T
@@ -155,6 +159,9 @@ def calculate_feature_statistics(features):
     """
     mean = np.mean(features, axis=0)
     std = np.std(features, axis=0)
+    """
+    What does where do here?
+    """
     std = np.where(std == 0, 1.0, std)
     return mean, std
 
@@ -338,6 +345,19 @@ def classify_image(
     Predict the class label of one image from its PCA coefficients.
     If Logistic Regression is used, apply the same feature standardization as during training.
     """
+    """
+    We are doing the reshaping because get_feature_representation only takes 2D input and since
+    we are doing the inference per image not per the entire test set, we need to convert that single 
+    flattened image into a 2D matrix. 
+    For example:
+    The flattened image: [1, 2, 3, 4, 5]
+    After reshaping: [[1, 2, 3, 4, 5]]
+    
+    Nothing fancy and complicated right?
+    reshape(1, -1)
+    The 1 here means I exactly want 1 rows and -1 means I don't know how you reshape my data to one rows, 
+    you should figure it out by yourself. 
+    """
     features = get_feature_representation(
         img.reshape(1, -1), eigenfaces, avg, num_eigenfaces
     )
@@ -348,11 +368,16 @@ def classify_image(
         else:
             feature_mean, feature_std = calculate_feature_statistics(features)
         """
-        Why do we need to standardize before inference?
+        The reason we standardize before inference too is that our classifier expects values
+        on that scale now because it has been trained on values in that scale so passing values 
+        on a totally different scale will definitely worsen our results. 
         """    
         features = standardize_features(features, feature_mean, feature_std)
 
     if classifier_type not in TRAINED_CLASSIFIERS:
         return np.array(["unknown"])
 
+    """
+    This returns the list of predicted labels. One label per each item in our dataset. 
+    """
     return TRAINED_CLASSIFIERS[classifier_type].predict(features)
