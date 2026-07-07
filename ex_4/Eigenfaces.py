@@ -280,19 +280,41 @@ def train_both_classifiers(labels, train, num_images, h, w, num_eigenfaces=None)
     """
     feature_mean, feature_std = calculate_feature_statistics(features)
     """
-    
+    The following line standardizes the features. What does it mean? It means that it ensures
+    the mean of the data will be 0 and the standard deviation will be 1. This type of standardization 
+    has another name. They also call it z-score normalization. 
     """
     features_standardized = standardize_features(features, feature_mean, feature_std)
+    """
+    We save the mean and std her because upon inference, we should use the same values that we used 
+    during training. The reason we care is that if we recalculate the std and mean of the test set 
+    and we standardize using these values, it is a form of data leakage. Which means, we are cheating 
+    to get better results. The problem is that during inference in real deployments we don't have a 
+    predefined huge test set that we can standardize our input with then perform inference on each of them,
+    but rather, each new image comes right away. So we don't want to report an accuracy that relies on having
+    a huge test set. That is misleading. 
+    """
     TRAINED_STANDARDIZATION["logistic"] = (feature_mean, feature_std)
 
     lr = _build_classifier("logistic")
     """
-    What is the benefit of standardizing the features for logistic regression?
+    Because logistic regression learns the weights and adjusts them iteratively right? this works better
+    in standardized data. The training will go smooth. 
     """
     lr.fit(features_standardized, labels)
+    """
+    We save the model so that we can use it during inference. 
+    """
     TRAINED_CLASSIFIERS["logistic"] = lr
 
     gnb = _build_classifier("gaussian_nb")
+    """
+    Gaussian Naive Bayes classifier does not standardized features though. 
+    GNB fits a separate bell curve (mean and variance) to each feature within each class, 
+    and judges each feature only against its own curve — it never combines features using shared 
+    weights the way logistic regression does. Since there's no cross-feature weighting to balance, 
+    the scale of one feature relative to another simply doesn't matter for how well the model fits or predicts.
+    """
     gnb.fit(features, labels)
     TRAINED_CLASSIFIERS["gaussian_nb"] = gnb
 
@@ -315,6 +337,9 @@ def classify_image(
             feature_mean, feature_std = TRAINED_STANDARDIZATION[classifier_type]
         else:
             feature_mean, feature_std = calculate_feature_statistics(features)
+        """
+        Why do we need to standardize before inference?
+        """    
         features = standardize_features(features, feature_mean, feature_std)
 
     if classifier_type not in TRAINED_CLASSIFIERS:
