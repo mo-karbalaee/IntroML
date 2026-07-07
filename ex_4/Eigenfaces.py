@@ -122,10 +122,19 @@ def calculate_average_face(train):
 
 def calculate_eigenfaces(train, avg, num_eigenfaces):
     """
-    Calculate the principal directions of the centered training set using SVD.
+    Calculate the principal directions of the centered training set using SVD (singular value decomposition).
+    Another method of performing PCA is using covariance matrices, but that is not computationally 
+    viable because calculating covariance matrices for high-resolution pictures is not efficient. 
+    Instead, we can do it with SVD. 
     """
     centered = train - avg
     U, S, Vt = np.linalg.svd(centered, full_matrices=False)
+    """
+    We only need the first num_eigenfaces of principal components. Vt stores
+    these eigenvectors sorted by importance (how big their eigenvalues are). Since
+    we don't want all the principal components, we just slice this array and return 
+    the sub-array we are interested in. 
+    """
     return Vt[:num_eigenfaces]
 
 
@@ -155,6 +164,7 @@ def standardize_features(features, feature_mean, feature_std):
     Standardize all features using the previously computed mean and standard deviation.
 
     Apply the same transformation to the training features and later to every test image.
+    This is just a z-score normalization. 
     """
     return (features - feature_mean) / feature_std
 
