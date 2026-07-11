@@ -10,12 +10,22 @@ The exercises are deliberately ordered as a **learning arc**: they start with ra
 
 ## The arc
 
-```
-ex_0 ── ex_1 ─────── ex_2 ──────────── ex_3 ───────────── ex_4 ──────────── ex_5
-pixels   preprocessing  filtering &      HOG features &      PCA / Eigenfaces   KNN · NBNN ·
-I/O      & thresholding  edges & morph.   image retrieval     face recognition   Logistic Reg.
+```mermaid
+flowchart LR
+    subgraph P1["🖼️ Raw image manipulation"]
+        direction LR
+        E0["<b>ex_0</b><br/>Image I/O"] --> E1["<b>ex_1</b><br/>Preprocessing<br/>& thresholding"]
+        E1 --> E2["<b>ex_2</b><br/>Filtering, edges<br/>& morphology"]
+    end
+    subgraph P2["🤖 Feature-based ML classification"]
+        direction LR
+        E3["<b>ex_3</b><br/>HOG features<br/>& retrieval"] --> E4["<b>ex_4</b><br/>PCA / Eigenfaces"]
+        E4 --> E5["<b>ex_5</b><br/>KNN · NBNN ·<br/>Logistic Reg."]
+    end
+    P1 ==> P2
 
-  raw image manipulation  ──────────────────────▶  feature-based ML classification
+    classDef node fill:#0969da,stroke:#0a3069,color:#ffffff;
+    class E0,E1,E2,E3,E4,E5 node;
 ```
 
 | # | Exercise | Theme | Key techniques (all hand-written) |
