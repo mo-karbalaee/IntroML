@@ -26,13 +26,13 @@ def confusion_matrix(y_true, y_pred):
     if y_true.size == 0:
         return np.zeros((0, 0), dtype=int)
 
-    # Infer the number of classes from the largest observed label.
+    # Infer the number of classes.
     num_classes = int(max(y_true.max(), y_pred.max())) + 1
 
     # Initialize the confusion matrix.
     cm = np.zeros((num_classes, num_classes), dtype=int)
 
-    # Fill the confusion matrix: rows are true labels, columns are predictions.
+    # Fill the confusion matrix.
     np.add.at(cm, (y_true.astype(int), y_pred.astype(int)), 1)
 
     return cm

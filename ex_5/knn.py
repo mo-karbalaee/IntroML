@@ -68,8 +68,6 @@ class KNNClassifier:
         denominator = train_norms * x_norm
 
         dot_products = self.X_train @ x
-        # Where the denominator is zero (a zero vector), the cosine similarity
-        # is undefined; treat it as 0 so the cosine distance becomes 1.
         similarity = np.divide(
             dot_products,
             denominator,
@@ -87,8 +85,6 @@ class KNNClassifier:
             If there is a tie, choose the smallest label after sorting.
         """
         labels, counts = np.unique(neighbor_labels, return_counts=True)
-        # np.unique returns sorted labels, so argmax picks the smallest label
-        # in case of a tie.
         return labels[np.argmax(counts)]
 
     def predict(self, X):
