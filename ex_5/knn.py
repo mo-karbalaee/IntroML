@@ -37,11 +37,21 @@ class KNNClassifier:
             - check that len(X) == len(y)
             - return self
         """
-        pass
+        X = np.asarray(X, dtype=np.float64)
+        y = np.asarray(y)
+
+        if X.ndim != 2:
+            raise ValueError("X must have shape (n_samples, n_features).")
+        if len(X) != len(y):
+            raise ValueError("X and y must contain the same number of samples.")
+
+        self.X_train = X
+        self.y_train = y
+        return self
 
     def _euclidean_distances(self, x):
         """Return the Euclidean distance from x to all training samples."""
-        pass
+        return np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
 
     def _cosine_distances(self, x):
         """
@@ -53,7 +63,20 @@ class KNNClassifier:
 
         Make sure that zero vectors do not cause a division-by-zero error.
         """
-        pass
+        x_norm = np.linalg.norm(x)
+        train_norms = np.linalg.norm(self.X_train, axis=1)
+        denominator = train_norms * x_norm
+
+        dot_products = self.X_train @ x
+        # Where the denominator is zero (a zero vector), the cosine similarity
+        # is undefined; treat it as 0 so the cosine distance becomes 1.
+        similarity = np.divide(
+            dot_products,
+            denominator,
+            out=np.zeros_like(dot_products, dtype=np.float64),
+            where=denominator != 0,
+        )
+        return 1.0 - similarity
 
     def _majority_vote(self, neighbor_labels):
         """
@@ -63,7 +86,10 @@ class KNNClassifier:
             np.unique(..., return_counts=True) is useful here.
             If there is a tie, choose the smallest label after sorting.
         """
-        pass
+        labels, counts = np.unique(neighbor_labels, return_counts=True)
+        # np.unique returns sorted labels, so argmax picks the smallest label
+        # in case of a tie.
+        return labels[np.argmax(counts)]
 
     def predict(self, X):
         """
@@ -78,27 +104,36 @@ class KNNClassifier:
             - optionally save neighbour plots when plot_neighbors is True
         """
         # Convert input data to a NumPy array.
-        X = np.asarray(X)
+        X = np.asarray(X, dtype=np.float64)
+
+        if self.X_train is None or self.y_train is None:
+            raise ValueError("The classifier must be fitted before calling predict().")
 
         # If a single sample is passed, turn it into shape (1, n_features).
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
 
         predictions = []
         # Iterate over each test sample to predict its label.
         for sample_index, x in enumerate(X):
             if self.metric == "euclidean":
                 # Compute Euclidean distances from x to all training samples.
-                pass
+                distances = self._euclidean_distances(x)
             elif self.metric == "cosine":
                 # Compute cosine distances from x to all training samples.
-                pass
+                distances = self._cosine_distances(x)
             else:
                 raise ValueError(f"Unsupported metric: {self.metric}")
 
             # Find the indices of the k nearest neighbours.
+            nn_indices = np.argsort(distances)[: self.n_neighbors]
 
             # Get the labels of the nearest neighbours.
+            nn_labels = self.y_train[nn_indices]
 
             # Find the most common label and append it to predictions.
+            predicted_label = self._majority_vote(nn_labels)
+            predictions.append(predicted_label)
 
             if self.plot_neighbors and self.image_shape is not None:
                 test_image = x.reshape(self.image_shape)

@@ -17,13 +17,22 @@ def confusion_matrix(y_true, y_pred):
     y_pred = np.asarray(y_pred)
 
     # Validate the shapes.
+    if y_true.shape != y_pred.shape:
+        raise ValueError("y_true and y_pred must have the same shape.")
+    if y_true.ndim != 1:
+        raise ValueError("y_true and y_pred must be one-dimensional.")
 
     # Handle the empty-input case.
+    if y_true.size == 0:
+        return np.zeros((0, 0), dtype=int)
 
-    # Infer the number of classes.
+    # Infer the number of classes from the largest observed label.
+    num_classes = int(max(y_true.max(), y_pred.max())) + 1
 
     # Initialize the confusion matrix.
+    cm = np.zeros((num_classes, num_classes), dtype=int)
 
-    # Fill the confusion matrix.
+    # Fill the confusion matrix: rows are true labels, columns are predictions.
+    np.add.at(cm, (y_true.astype(int), y_pred.astype(int)), 1)
 
     return cm
