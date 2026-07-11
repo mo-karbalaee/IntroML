@@ -3,11 +3,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
 
-from evaluation import confusion_matrix
-from knn import KNNClassifier
-from logistic_regression import LogisticRegressionClassifier
-from nbnn import NBNNClassifier
-from visualization import plot_accuracy_comparison, plot_confusion_matrix
+from ex_5.evaluation import confusion_matrix
+from ex_5.knn import KNNClassifier
+from ex_5.logistic_regression import LogisticRegressionClassifier
+from ex_5.nbnn import NBNNClassifier
+from ex_5.visualization import plot_accuracy_comparison, plot_confusion_matrix
 
 
 BASE_DIR = Path(__file__).resolve().parent

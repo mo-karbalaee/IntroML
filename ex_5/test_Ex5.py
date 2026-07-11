@@ -8,12 +8,12 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from evaluation import confusion_matrix
-from knn import KNNClassifier
-from logistic_regression import LogisticRegressionClassifier
-from nbnn import NBNNClassifier
-from main import IMG_SIZE, TRAIN_DIR, UNIT_TEST_DIR, load_images_labels
-from visualization import plot_confusion_matrix, plot_knn_neighbors
+from ex_5.evaluation import confusion_matrix
+from ex_5.knn import KNNClassifier
+from ex_5.logistic_regression import LogisticRegressionClassifier
+from ex_5.nbnn import NBNNClassifier
+from ex_5.main import IMG_SIZE, TRAIN_DIR, UNIT_TEST_DIR, load_images_labels
+from ex_5.visualization import plot_confusion_matrix, plot_knn_neighbors
 
 
 class TestExercise5(unittest.TestCase):

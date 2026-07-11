@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from visualization import plot_knn_neighbors
+from ex_5.visualization import plot_knn_neighbors
 
 
 class KNNClassifier:
