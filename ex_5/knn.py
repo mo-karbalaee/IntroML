@@ -26,6 +26,16 @@ class KNNClassifier:
         self.y_train = None
 
     def fit(self, X, y):
+        """
+        Store the training data and labels as NumPy arrays.
+
+        Requirements:
+            - convert X and y to NumPy arrays
+            - check that X has shape (n_samples, n_features)
+            - check that len(X) == len(y)
+            - return self
+        """
+
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y)
 
@@ -39,9 +49,19 @@ class KNNClassifier:
         return self
 
     def _euclidean_distances(self, x):
+        """Return the Euclidean distance from x to all training samples."""
         return np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
 
     def _cosine_distances(self, x):
+        """
+        Return the cosine distance from x to all training samples.
+
+        Hint:
+            cosine_distance = 1 - cosine_similarity
+            cosine_similarity = (a · b) / (||a|| * ||b||)
+
+        Make sure that zero vectors do not cause a division-by-zero error.
+        """
         x_norm = np.linalg.norm(x)
         train_norms = np.linalg.norm(self.X_train, axis=1)
         denominator = train_norms * x_norm
@@ -56,10 +76,30 @@ class KNNClassifier:
         return 1.0 - similarity
 
     def _majority_vote(self, neighbor_labels):
+        """
+        Return the most frequent label among the nearest neighbours.
+
+        Hint:
+            np.unique(..., return_counts=True) is useful here.
+            If there is a tie, choose the smallest label after sorting.
+        """
+
         labels, counts = np.unique(neighbor_labels, return_counts=True)
         return labels[np.argmax(counts)]
 
     def predict(self, X):
+        """
+        Predict labels for one or more input samples.
+
+        Requirements:
+            - convert X to a NumPy array
+            - allow a single sample with shape (n_features,)
+            - compute distances with the selected metric
+            - select the k nearest neighbours
+            - predict by majority vote
+            - optionally save neighbour plots when plot_neighbors is True
+        """
+
         X = np.asarray(X, dtype=np.float64)
 
         if self.X_train is None or self.y_train is None:
