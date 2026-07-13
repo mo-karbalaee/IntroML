@@ -6,11 +6,34 @@ except ImportError:
     LogisticRegression = None
 
 
+"""
+We are just developing a wrapper here. The mathematical heavy lifting is 
+done by sklearn. This wrapper is designed to do some validations and give
+the structure that the main file can treat this classifier the same way it 
+treats the other two. Have in mind that logistic regression is an eager learner.
+Not a lazy learner like KNN and NBNN.
+"""
 class LogisticRegressionClassifier:
     def __init__(self, max_iter=2000, random_state=0):
+        """
+        Ok what are these two? logistic regression is an iterative algorithm, meaning, 
+        it will not find the optimal weights one shot. We can specify how many iterations
+        we want it to continue the optimization. 
+        The random state is a little trickier but nothing so hard to understand. 
+        There are some random operations in the algorithm that might results into 
+        slightly different final weights. Since we want to use the model in a stable 
+        fashion for inference, we set a seed for this random operations so that we can 
+        use the same seed for inference. This way each inference is not using a slightly
+        different model. 
+        """
         self.max_iter = max_iter
         self.random_state = random_state
         self.model = None
+        """
+        We store it for validation reasons. 
+        The underscore in the end is a sklearn syntax and has a meaning. 
+        It indicates that this value will be set during training not by the user. 
+        """
         self.n_features_ = None
 
     def fit(self, X, y):
@@ -46,6 +69,9 @@ class LogisticRegressionClassifier:
         )
         self.model.fit(X, y)
         self.n_features_ = X.shape[1]
+        """
+        We return self because function chaining is cool. Remember?
+        """
         return self
 
     def predict(self, X):
@@ -68,4 +94,8 @@ class LogisticRegressionClassifier:
         if X.shape[1] != self.n_features_:
             raise ValueError(f"Expected {self.n_features_} features, got {X.shape[1]}.")
 
+        """
+        Nothing fancy here. Just run the predict on the model and ensure it is a 
+        numpy array and return it. Easy and intuitive. 
+        """
         return np.asarray(self.model.predict(X))
