@@ -25,6 +25,14 @@ class KNNClassifier:
         self.X_train = None
         self.y_train = None
 
+    """
+    X is the training array and y is the labels. 
+    This method does nothing, but some type checking and validation
+    and storing the training data and the labels in this class. 
+    That's because we need the training data and labels during inference. 
+    That's how KNN works. You look into the neighbors and the the most
+    frequency of labels within that neighborhood wins. 
+    """
     def fit(self, X, y):
         """
         Store the training data and labels as NumPy arrays.
@@ -35,7 +43,11 @@ class KNNClassifier:
             - check that len(X) == len(y)
             - return self
         """
-
+        """
+        X and Y can be anything. A python list or a tuple or something. 
+        This np.asarray makes sure that we convert them to numpy arrays 
+        before validation and storage. 
+        """
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y)
 
@@ -46,10 +58,19 @@ class KNNClassifier:
 
         self.X_train = X
         self.y_train = y
+        """
+        We return self because it allows for method chaining. For example:
+        predictions = KNNClassifier(n_neighbors=3).fit(X_train, y_train).predict(X_test)
+        """
         return self
 
     def _euclidean_distances(self, x):
-        """Return the Euclidean distance from x to all training samples."""
+        """
+        Return the Euclidean distance from x to all training samples.
+        Basically this is one of the reasons that they say KNN is not 
+        scalable. When the training set is huge, calculating these distances
+        is really computationally expensive. 
+        """
         return np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
 
     def _cosine_distances(self, x):
@@ -62,22 +83,46 @@ class KNNClassifier:
 
         Make sure that zero vectors do not cause a division-by-zero error.
         """
+        """
+        This is not normalizing x, it is calculating its norm. 
+        The norm of a vector is its magnitude. AKA, its size which 
+        is used in the denominator of the cosine similarity formula. 
+        """
         x_norm = np.linalg.norm(x)
+        """
+        axis=1 means for each row. For each item. Not the norm of the entire vector.
+        """
         train_norms = np.linalg.norm(self.X_train, axis=1)
         denominator = train_norms * x_norm
 
+        """
+        Pay attention that we used self.X_train here instead of the 
+        train_norms because in the formula's numerator the original 
+        values are being used for dot product calculation not their magnitude. 
+        """
         dot_products = self.X_train @ x
+
+        """
+        where=denominator != 0,
+        This helps with making sure division by zero does not happen. 
+        We are using np.divide instead of standard python division because
+        of this exactly. The where and out parameters help with that. 
+        """
         similarity = np.divide(
             dot_products,
             denominator,
             out=np.zeros_like(dot_products, dtype=np.float64),
             where=denominator != 0,
         )
+        """
+        This method only returns the distances not the least distance. 
+        That's what the _majority_vote method does. 
+        """
         return 1.0 - similarity
 
     def _majority_vote(self, neighbor_labels):
         """
-        Return the most frequent label among the nearest neighbours.
+        Return the most frequent label among the nearest neighbors.
 
         Hint:
             np.unique(..., return_counts=True) is useful here.
@@ -95,9 +140,9 @@ class KNNClassifier:
             - convert X to a NumPy array
             - allow a single sample with shape (n_features,)
             - compute distances with the selected metric
-            - select the k nearest neighbours
+            - select the k nearest neighbors
             - predict by majority vote
-            - optionally save neighbour plots when plot_neighbors is True
+            - optionally save neighbor plots when plot_neighbors is True
         """
 
         X = np.asarray(X, dtype=np.float64)
