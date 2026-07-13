@@ -2,7 +2,7 @@ import numpy as np
 
 try:
     from sklearn.linear_model import LogisticRegression
-except ImportError:  # pragma: no cover - depends on local environment
+except ImportError:
     LogisticRegression = None
 
 
@@ -14,19 +14,10 @@ class LogisticRegressionClassifier:
         self.n_features_ = None
 
     def fit(self, X, y):
-        """
-        Train a logistic-regression classifier on the given feature matrix.
-
-        Requirements:
-            - convert X and y to NumPy arrays
-            - validate that X has shape (n_samples, n_features)
-            - validate that y is one-dimensional
-            - validate that X and y contain the same number of samples
-            - create and fit sklearn.linear_model.LogisticRegression
-            - return self
-        """
         if LogisticRegression is None:
-            raise ImportError("scikit-learn is required for LogisticRegressionClassifier.")
+            raise ImportError(
+                "scikit-learn is required for LogisticRegressionClassifier."
+            )
 
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y)
@@ -47,15 +38,6 @@ class LogisticRegressionClassifier:
         return self
 
     def predict(self, X):
-        """
-        Predict labels for one or more input samples.
-
-        Requirements:
-            - raise an error if fit() was not called first
-            - accept either a single sample or a full batch
-            - validate the feature dimension
-            - return the model predictions as a NumPy array
-        """
         if self.model is None:
             raise ValueError("The classifier must be fitted before calling predict().")
 
@@ -64,8 +46,6 @@ class LogisticRegressionClassifier:
             X = X.reshape(1, -1)
 
         if X.shape[1] != self.n_features_:
-            raise ValueError(
-                f"Expected {self.n_features_} features, got {X.shape[1]}."
-            )
+            raise ValueError(f"Expected {self.n_features_} features, got {X.shape[1]}.")
 
         return np.asarray(self.model.predict(X))

@@ -9,7 +9,6 @@ from ex_5.logistic_regression import LogisticRegressionClassifier
 from ex_5.nbnn import NBNNClassifier
 from ex_5.visualization import plot_accuracy_comparison, plot_confusion_matrix
 
-
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "images"
 if not DATA_DIR.exists():
@@ -23,22 +22,14 @@ IMG_SIZE = (64, 64)
 
 
 def load_images_labels(folder, image_size=IMG_SIZE):
-    """
-    Load all images from a class-folder structure and return flattened arrays.
-
-    Parameters:
-        folder (str | Path): Directory containing subfolders such as CLASS_0.
-        image_size (tuple[int, int]): Target image size (width, height).
-
-    Returns:
-        tuple[np.ndarray, np.ndarray]: Feature matrix and label array.
-    """
     images = []
     labels = []
     folder = Path(folder)
 
     for class_dir in sorted(path for path in folder.iterdir() if path.is_dir()):
-        for image_path in sorted(path for path in class_dir.iterdir() if path.is_file()):
+        for image_path in sorted(
+            path for path in class_dir.iterdir() if path.is_file()
+        ):
             with Image.open(image_path) as image:
                 image = ImageOps.exif_transpose(image).convert("L")
                 image = image.resize(image_size)
@@ -51,14 +42,6 @@ def load_images_labels(folder, image_size=IMG_SIZE):
 
 
 def encode_labels(*label_arrays):
-    """
-    Encode one or more label arrays into consecutive integers.
-
-    Returns:
-        classes (np.ndarray): Sorted class names.
-        class_to_int (dict): Mapping from class name to integer index.
-        encoded_arrays (list[np.ndarray]): Encoded label arrays in input order.
-    """
     classes = np.unique(np.concatenate(label_arrays))
     class_to_int = {label: index for index, label in enumerate(classes)}
     encoded_arrays = [
@@ -74,31 +57,24 @@ def save_confusion_plot(y_true, y_pred, class_names, title, save_path):
 
 
 def main(k_test_samples=None, random_state=0):
-    """
-    Run the Exercise 5 evaluation pipeline on the Kaktovik dataset.
-
-    The script generates:
-        - 11 neighbour plots on the unit-test set
-        - confusion matrix plots for all classifier variants
-        - one accuracy comparison plot
-
-    By default, the quantitative evaluation uses the full official test split.
-    The optional argument k_test_samples exists only for debugging.
-    """
     print("Loading training data...")
     X_train, y_train = load_images_labels(TRAIN_DIR)
     print("Loading test data...")
     X_test, y_test = load_images_labels(TEST_DIR)
     print("Loading unit-test data...")
     X_unit, y_unit = load_images_labels(UNIT_TEST_DIR)
-    print(f"Dataset sizes: train={len(X_train)}, test={len(X_test)}, unit_test={len(X_unit)}")
+    print(
+        f"Dataset sizes: train={len(X_train)}, test={len(X_test)}, unit_test={len(X_unit)}"
+    )
 
     if k_test_samples is not None and k_test_samples < len(X_test):
         rng = np.random.default_rng(random_state)
         indices = rng.choice(len(X_test), size=k_test_samples, replace=False)
         X_test = X_test[indices]
         y_test = y_test[indices]
-        print(f"Debug mode: evaluating on a reduced subset of {len(X_test)} test images.")
+        print(
+            f"Debug mode: evaluating on a reduced subset of {len(X_test)} test images."
+        )
     else:
         print("Evaluating on the full test split.")
 
@@ -124,8 +100,14 @@ def main(k_test_samples=None, random_state=0):
     accuracies = {}
 
     for classifier_name, classifier in (
-        ("KNN (euclidean)", KNNClassifier(n_neighbors=3, metric="euclidean", image_shape=IMG_SIZE)),
-        ("KNN (cosine)", KNNClassifier(n_neighbors=3, metric="cosine", image_shape=IMG_SIZE)),
+        (
+            "KNN (euclidean)",
+            KNNClassifier(n_neighbors=3, metric="euclidean", image_shape=IMG_SIZE),
+        ),
+        (
+            "KNN (cosine)",
+            KNNClassifier(n_neighbors=3, metric="cosine", image_shape=IMG_SIZE),
+        ),
         ("NBNN (euclidean)", NBNNClassifier(metric="euclidean")),
         ("NBNN (cosine)", NBNNClassifier(metric="cosine")),
     ):

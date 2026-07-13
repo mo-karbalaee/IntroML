@@ -3,22 +3,12 @@ import numpy as np
 
 class NBNNClassifier:
     def __init__(self, metric="euclidean"):
-        # Distance metric: "euclidean" or "cosine".
         self.metric = metric
         self.X_train = None
         self.y_train = None
         self.classes_ = None
 
     def fit(self, X, y):
-        """
-        Store training data and labels as NumPy arrays.
-
-        Requirements:
-            - convert X and y to NumPy arrays
-            - validate shapes
-            - store the sorted unique class labels in self.classes_
-            - return self
-        """
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y)
 
@@ -33,16 +23,9 @@ class NBNNClassifier:
         return self
 
     def _euclidean_distances(self, x):
-        """Return the Euclidean distance from x to all training samples."""
         return np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
 
     def _cosine_distances(self, x):
-        """
-        Return the cosine distance from x to all training samples.
-
-        Use the same convention as in knn.py:
-            cosine_distance = 1 - cosine_similarity
-        """
         x_norm = np.linalg.norm(x)
         train_norms = np.linalg.norm(self.X_train, axis=1)
         denominator = train_norms * x_norm
@@ -57,26 +40,9 @@ class NBNNClassifier:
         return 1.0 - similarity
 
     def _class_scores(self, distances):
-        """
-        Compute one score per class.
-
-        For each class, use the distance of the nearest training sample from
-        that class. The predicted class is the class with the smallest score.
-        """
-        return np.array(
-            [distances[self.y_train == cls].min() for cls in self.classes_]
-        )
+        return np.array([distances[self.y_train == cls].min() for cls in self.classes_])
 
     def predict(self, X):
-        """
-        Predict labels for one or more samples with the NBNN rule.
-
-        Requirements:
-            - allow either a single sample or a batch
-            - compute distances to all training samples
-            - convert them into class-wise scores
-            - return the class label with the smallest score
-        """
         X = np.asarray(X, dtype=np.float64)
 
         if self.X_train is None or self.y_train is None:

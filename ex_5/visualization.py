@@ -30,19 +30,6 @@ def plot_knn_neighbors(
     save_path=None,
     show=False,
 ):
-    """
-    Visualize one test image together with its k nearest neighbours.
-
-    Parameters:
-        test_image (np.ndarray): Test image with shape (H, W) or (H, W, C).
-        neighbor_images (list[np.ndarray]): Images of the nearest neighbours.
-        neighbor_labels (list | np.ndarray): Labels of the nearest neighbours.
-        test_label: Optional true label of the test image.
-        pred_label: Optional predicted label of the test image.
-        figsize (tuple): Figure size.
-        save_path (str | Path | None): Save figure to this file if given.
-        show (bool): Display the figure interactively when no save path is used.
-    """
     k = len(neighbor_images)
     fig, axes = plt.subplots(1, k + 1, figsize=figsize)
 
@@ -58,7 +45,9 @@ def plot_knn_neighbors(
     axes[0].set_title(title)
     axes[0].axis("off")
 
-    for index, (img, label) in enumerate(zip(neighbor_images, neighbor_labels), start=1):
+    for index, (img, label) in enumerate(
+        zip(neighbor_images, neighbor_labels), start=1
+    ):
         axes[index].imshow(img.squeeze(), cmap="gray" if img.ndim == 2 else None)
         axes[index].set_title(f"Neighbor {index}\nLabel: {label}")
         axes[index].axis("off")
@@ -67,17 +56,9 @@ def plot_knn_neighbors(
     _finish_figure(fig, save_path=save_path, show=show)
 
 
-def plot_confusion_matrix(cm, class_names, title="Confusion Matrix", save_path=None, show=False):
-    """
-    Plot a confusion matrix.
-
-    Parameters:
-        cm (np.ndarray): Confusion matrix with shape (n_classes, n_classes).
-        class_names (list[str]): Display names for the classes.
-        title (str): Figure title.
-        save_path (str | Path | None): Save figure to this file if given.
-        show (bool): Display the figure interactively when no save path is used.
-    """
+def plot_confusion_matrix(
+    cm, class_names, title="Confusion Matrix", save_path=None, show=False
+):
     fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(cm, cmap="Blues")
 
@@ -93,22 +74,23 @@ def plot_confusion_matrix(cm, class_names, title="Confusion Matrix", save_path=N
 
     for row in range(cm.shape[0]):
         for col in range(cm.shape[1]):
-            ax.text(col, row, cm[row, col], ha="center", va="center", color="black", fontsize=12)
+            ax.text(
+                col,
+                row,
+                cm[row, col],
+                ha="center",
+                va="center",
+                color="black",
+                fontsize=12,
+            )
 
     fig.tight_layout()
     _finish_figure(fig, save_path=save_path, show=show)
 
 
-def plot_accuracy_comparison(acc_dict, title="Classifier Accuracy Comparison", save_path=None, show=False):
-    """
-    Plot a bar chart comparing classifier accuracies.
-
-    Parameters:
-        acc_dict (dict[str, float]): Mapping from classifier name to accuracy.
-        title (str): Figure title.
-        save_path (str | Path | None): Save figure to this file if given.
-        show (bool): Display the figure interactively when no save path is used.
-    """
+def plot_accuracy_comparison(
+    acc_dict, title="Classifier Accuracy Comparison", save_path=None, show=False
+):
     names = list(acc_dict.keys())
     accuracies = list(acc_dict.values())
 
