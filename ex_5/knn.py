@@ -159,7 +159,7 @@ class KNNClassifier:
         Predict labels for one or more input samples.
 
         Requirements:
-            - convert X to a NumPy array
+            - convert X to a NumPy array. This is the list of of test values. 
             - allow a single sample with shape (n_features,)
             - compute distances with the selected metric
             - select the k nearest neighbors
@@ -172,10 +172,25 @@ class KNNClassifier:
         if self.X_train is None or self.y_train is None:
             raise ValueError("The classifier must be fitted before calling predict().")
 
+        """
+        Do you remember what we did in the last exercise?
+        this is exactly the same thing. 
+        This if is added to handle cases where only one item is passed as input. (n_features,)
+        This code reshapes it to (1, n_features). This way it will be compatible with 
+        the rest of the code. Otherwise, KNN will happen on a pixel-based basis. 
+        """
         if X.ndim == 1:
+            """
+            This means you should reshape it to a 1D array and -1 means I don't give a fuck
+            how you do it, you figure it out. 
+            """
             X = X.reshape(1, -1)
 
         predictions = []
+        """
+        enumerate(X) gives us an advantage that not using it and just saying "in X"
+        doesn't. 
+        """
         for sample_index, x in enumerate(X):
             if self.metric == "euclidean":
                 distances = self._euclidean_distances(x)
@@ -184,13 +199,25 @@ class KNNClassifier:
             else:
                 raise ValueError(f"Unsupported metric: {self.metric}")
 
+            """
+            np.argsort will give the indices of the sorted array. Not that it sorts it
+            but tells each item should go to which index in order to sort the input array. 
+            But here we want to extract the number of the K nearest neighbors then in 
+            the next line we will get the actual labels of them by passing the indices to the 
+            array of the entire training dataset. 
+            """
             nn_indices = np.argsort(distances)[: self.n_neighbors]
 
             nn_labels = self.y_train[nn_indices]
 
             predicted_label = self._majority_vote(nn_labels)
             predictions.append(predicted_label)
-
+            
+            """
+            This part is simple. It will save the neighboring images because it is 
+            interesting to know exactly what the neighbors where and what was the prediction. 
+            These images can help with hyperparameter tuning. 
+            """
             if self.plot_neighbors and self.image_shape is not None:
                 test_image = x.reshape(self.image_shape)
                 neighbor_images = [
@@ -203,7 +230,7 @@ class KNNClassifier:
                         Path(self.plot_dir)
                         / f"{self.plot_prefix}_{sample_index:02d}.png"
                     )
-
+                    
                 plot_knn_neighbors(
                     test_image=test_image,
                     neighbor_images=neighbor_images,
