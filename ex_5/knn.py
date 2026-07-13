@@ -123,13 +123,35 @@ class KNNClassifier:
     def _majority_vote(self, neighbor_labels):
         """
         Return the most frequent label among the nearest neighbors.
+        The predict function is responsible for passing this array
+        of nearest neighbors to it. 
+        Essentially this method takes a list of the labels of the 
+        neighboring values to a point. Then it should return the most
+        frequent label. 
 
         Hint:
             np.unique(..., return_counts=True) is useful here.
             If there is a tie, choose the smallest label after sorting.
         """
-
+        """
+        We apply np.unique because we only care about the name of the labels. 
+        Basically we are stripping out the counts as a separate array. 
+        """
         labels, counts = np.unique(neighbor_labels, return_counts=True)
+        """
+        labels is an ascending sorted array of the labels and counts is the 
+        array that contains the frequency of each of these labels. 
+        Have in mind that the labels passed are not strings but numbers. 
+        It is important for the labels array to be sorted in ascending order because
+        it helps with the tie resolution situations. The tutors have specified that in 
+        case of a tie, meaning the same frequency among a set of labels, the one with the 
+        least value should be returned. So for example if we have 2 of labels 3 and 7, 3 
+        will be returned even though they have the same frequency. 
+        """
+        """
+        np.argmax will return the index of the most recurring label. 
+        arg means index. 
+        """
         return labels[np.argmax(counts)]
 
     def predict(self, X):
