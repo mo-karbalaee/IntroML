@@ -17,7 +17,6 @@ class NBNNClassifier:
         self._patch_descriptors = None
         self._patch_labels = None
         self._class_columns = None
-        self._patch_sq_norms = None
 
     def _resolve_image_shape(self, n_features):
         if self.image_shape is not None:
@@ -37,10 +36,6 @@ class NBNNClassifier:
             for j in range(0, w - p + 1, s):
                 patches.append(image[i : i + p, j : j + p].reshape(-1))
         return np.asarray(patches, dtype=np.float64)
-
-    def _normalize_rows(self, matrix):
-        norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-        return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
 
     def fit(self, X, y):
         X = np.asarray(X, dtype=np.float64)
@@ -76,27 +71,33 @@ class NBNNClassifier:
             descriptors = X
             labels = y
 
-        if self.metric == "cosine":
-            descriptors = self._normalize_rows(descriptors)
-
         self._patch_descriptors = descriptors
         self._patch_labels = labels
-        self._patch_sq_norms = np.sum(descriptors**2, axis=1)
         self._class_columns = [np.where(labels == cls)[0] for cls in self.classes_]
         return self
 
-    def _descriptor_distances(self, query):
+    def _euclidean_distances(self, query):
         train = self._patch_descriptors
-        if self.metric == "cosine":
-            query = self._normalize_rows(query)
-            return 1.0 - query @ train.T
-        elif self.metric == "euclidean":
-            query_sq = np.sum(query**2, axis=1, keepdims=True)
-            d2 = query_sq + self._patch_sq_norms[None, :] - 2.0 * (query @ train.T)
-            np.maximum(d2, 0.0, out=d2)
-            return np.sqrt(d2)
-        else:
-            raise ValueError(f"Unsupported metric: {self.metric}")
+        query_sq = np.sum(query ** 2, axis=1, keepdims=True)
+        train_sq = np.sum(train ** 2, axis=1)
+        d2 = query_sq + train_sq[None, :] - 2.0 * (query @ train.T)
+        np.maximum(d2, 0.0, out=d2)
+        return np.sqrt(d2)
+
+    def _cosine_distances(self, query):
+        train = self._patch_descriptors
+        query_norms = np.linalg.norm(query, axis=1, keepdims=True)
+        train_norms = np.linalg.norm(train, axis=1, keepdims=True)
+        denominator = query_norms * train_norms.T
+
+        dot_products = query @ train.T
+        similarity = np.divide(
+            dot_products,
+            denominator,
+            out=np.zeros_like(dot_products, dtype=np.float64),
+            where=denominator != 0,
+        )
+        return 1.0 - similarity
 
     def _class_scores(self, distances):
         scores = np.empty(len(self.classes_), dtype=np.float64)
@@ -119,7 +120,14 @@ class NBNNClassifier:
                 query = self._extract_patches(row)
             else:
                 query = row.reshape(1, -1)
-            distances = self._descriptor_distances(query)
+
+            if self.metric == "euclidean":
+                distances = self._euclidean_distances(query)
+            elif self.metric == "cosine":
+                distances = self._cosine_distances(query)
+            else:
+                raise ValueError(f"Unsupported metric: {self.metric}")
+
             scores = self._class_scores(distances)
             predictions.append(self.classes_[np.argmin(scores)])
 
