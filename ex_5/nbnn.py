@@ -28,11 +28,19 @@ class NBNNClassifier:
 
         self.X_train = X
         self.y_train = y
+        """
+        The unique list of items in the label array is all
+        the possible labels. Easy. This method is like KNN's fit 
+        method since it is also a lazy learner. 
+        """
         self.classes_ = np.unique(y)
         return self
 
     def _euclidean_distances(self, x):
         """Return the Euclidean distance from x to all training samples."""
+        """
+        The same as KNN. 
+        """
 
         return np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
 
@@ -42,6 +50,10 @@ class NBNNClassifier:
 
         Use the same convention as in knn.py:
             cosine_distance = 1 - cosine_similarity
+        """
+        
+        """
+        The same as KNN. 
         """
 
         x_norm = np.linalg.norm(x)
@@ -63,6 +75,8 @@ class NBNNClassifier:
 
         For each class, use the distance of the nearest training sample from
         that class. The predicted class is the class with the smallest score.
+        
+        Nothing new here. It is just the simple implementation of the docstring. 
         """
 
         return np.array([distances[self.y_train == cls].min() for cls in self.classes_])
