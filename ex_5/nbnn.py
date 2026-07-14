@@ -2,22 +2,47 @@ import numpy as np
 
 
 class NBNNClassifier:
-    def __init__(self, metric="euclidean"):
+    def __init__(self, metric="euclidean", patch_size=16, stride=16, image_shape=None):
         self.metric = metric
+        self.patch_size = patch_size
+        self.stride = stride
+        self.image_shape = image_shape
+
         self.X_train = None
         self.y_train = None
         self.classes_ = None
 
-    def fit(self, X, y):
-        """
-        Store training data and labels as NumPy arrays.
+        self._use_patches = False
+        self._image_shape = None
+        self._patch_descriptors = None
+        self._patch_labels = None
+        self._class_columns = None
+        self._patch_sq_norms = None
 
-        Requirements:
-            - convert X and y to NumPy arrays
-            - validate shapes
-            - store the sorted unique class labels in self.classes_
-            - return self
-        """
+    def _resolve_image_shape(self, n_features):
+        if self.image_shape is not None:
+            return self.image_shape
+        side = int(round(np.sqrt(n_features)))
+        if side * side == n_features:
+            return (side, side)
+        return None
+
+    def _extract_patches(self, row):
+        h, w = self._image_shape
+        image = row.reshape(h, w)
+        p = self.patch_size
+        s = self.stride
+        patches = []
+        for i in range(0, h - p + 1, s):
+            for j in range(0, w - p + 1, s):
+                patches.append(image[i : i + p, j : j + p].reshape(-1))
+        return np.asarray(patches, dtype=np.float64)
+
+    def _normalize_rows(self, matrix):
+        norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+        return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms != 0)
+
+    def fit(self, X, y):
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y)
 
@@ -29,54 +54,57 @@ class NBNNClassifier:
         self.X_train = X
         self.y_train = y
         self.classes_ = np.unique(y)
+
+        shape = self._resolve_image_shape(X.shape[1])
+        self._image_shape = shape
+        self._use_patches = (
+            shape is not None
+            and self.patch_size <= shape[0]
+            and self.patch_size <= shape[1]
+        )
+
+        if self._use_patches:
+            descriptor_blocks = []
+            label_blocks = []
+            for row, label in zip(X, y):
+                patches = self._extract_patches(row)
+                descriptor_blocks.append(patches)
+                label_blocks.append(np.full(len(patches), label))
+            descriptors = np.concatenate(descriptor_blocks, axis=0)
+            labels = np.concatenate(label_blocks, axis=0)
+        else:
+            descriptors = X
+            labels = y
+
+        if self.metric == "cosine":
+            descriptors = self._normalize_rows(descriptors)
+
+        self._patch_descriptors = descriptors
+        self._patch_labels = labels
+        self._patch_sq_norms = np.sum(descriptors**2, axis=1)
+        self._class_columns = [np.where(labels == cls)[0] for cls in self.classes_]
         return self
 
-    def _euclidean_distances(self, x):
-        """Return the Euclidean distance from x to all training samples."""
-
-        return np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
-
-    def _cosine_distances(self, x):
-        """
-        Return the cosine distance from x to all training samples.
-
-        Use the same convention as in knn.py:
-            cosine_distance = 1 - cosine_similarity
-        """
-
-        x_norm = np.linalg.norm(x)
-        train_norms = np.linalg.norm(self.X_train, axis=1)
-        denominator = train_norms * x_norm
-
-        dot_products = self.X_train @ x
-        similarity = np.divide(
-            dot_products,
-            denominator,
-            out=np.zeros_like(dot_products, dtype=np.float64),
-            where=denominator != 0,
-        )
-        return 1.0 - similarity
+    def _descriptor_distances(self, query):
+        train = self._patch_descriptors
+        if self.metric == "cosine":
+            query = self._normalize_rows(query)
+            return 1.0 - query @ train.T
+        elif self.metric == "euclidean":
+            query_sq = np.sum(query**2, axis=1, keepdims=True)
+            d2 = query_sq + self._patch_sq_norms[None, :] - 2.0 * (query @ train.T)
+            np.maximum(d2, 0.0, out=d2)
+            return np.sqrt(d2)
+        else:
+            raise ValueError(f"Unsupported metric: {self.metric}")
 
     def _class_scores(self, distances):
-        """
-        Compute one score per class.
-
-        For each class, use the distance of the nearest training sample from
-        that class. The predicted class is the class with the smallest score.
-        """
-
-        return np.array([distances[self.y_train == cls].min() for cls in self.classes_])
+        scores = np.empty(len(self.classes_), dtype=np.float64)
+        for index, columns in enumerate(self._class_columns):
+            scores[index] = distances[:, columns].min(axis=1).sum()
+        return scores
 
     def predict(self, X):
-        """
-        Predict labels for one or more samples with the NBNN rule.
-
-        Requirements:
-            - allow either a single sample or a batch
-            - compute distances to all training samples
-            - convert them into class-wise scores
-            - return the class label with the smallest score
-        """
         X = np.asarray(X, dtype=np.float64)
 
         if self.X_train is None or self.y_train is None:
@@ -86,14 +114,12 @@ class NBNNClassifier:
             X = X.reshape(1, -1)
 
         predictions = []
-        for x in X:
-            if self.metric == "euclidean":
-                distances = self._euclidean_distances(x)
-            elif self.metric == "cosine":
-                distances = self._cosine_distances(x)
+        for row in X:
+            if self._use_patches:
+                query = self._extract_patches(row)
             else:
-                raise ValueError(f"Unsupported metric: {self.metric}")
-
+                query = row.reshape(1, -1)
+            distances = self._descriptor_distances(query)
             scores = self._class_scores(distances)
             predictions.append(self.classes_[np.argmin(scores)])
 
