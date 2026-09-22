@@ -1,0 +1,55 @@
+<h2 class="sr-only">Animation showing how scaled sinc functions placed at each sample add up to reconstruct a continuous signal.</h2>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;">
+<button id="play"><i class="ti ti-player-play" aria-hidden="true"></i> Play</button>
+<button id="step">Add one stamp</button>
+<button id="reset"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button>
+<label style="font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;margin-left:8px;"><input type="checkbox" id="orig" checked> Show original signal</label>
+<label style="font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;"><input type="checkbox" id="all" checked> Show all stamps</label>
+</div>
+<div style="position:relative;width:100%;height:320px;"><canvas id="c" style="width:100%;height:320px;display:block;"></canvas></div>
+<div style="display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--text-secondary);margin:10px 0 4px;">
+<span><span style="display:inline-block;width:14px;height:2px;background:#888780;vertical-align:middle;margin-right:6px;"></span>Original analog signal</span>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1D9E75;vertical-align:middle;margin-right:6px;"></span>Samples</span>
+<span><span style="display:inline-block;width:14px;height:2px;background:#D85A30;vertical-align:middle;margin-right:6px;"></span>Current stamp</span>
+<span><span style="display:inline-block;width:14px;height:2px;background:#AFA9EC;vertical-align:middle;margin-right:6px;"></span>Earlier stamps</span>
+<span><span style="display:inline-block;width:14px;height:3px;background:#0F6E56;vertical-align:middle;margin-right:6px;"></span>Sum = reconstruction</span>
+</div>
+<p id="status" style="font-size:14px;color:var(--text-primary);margin:8px 0 0;"></p>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const N=17,dx=0.5,x0=-0.5,x1=8.5,y0=-2,y1=2;
+const f=x=>Math.sin(2*Math.PI*0.3*x)+0.5*Math.cos(2*Math.PI*0.7*x);
+const sinc=t=>Math.abs(t)<1e-9?1:Math.sin(t)/t;
+const fk=[];for(let k=0;k<N;k++)fk.push(f(k*dx));
+const stamp=(k,x)=>fk[k]*sinc(Math.PI*(x-k*dx)/dx);
+let added=0,prog=0,playing=false,W=0,H=320;
+const css=getComputedStyle(document.documentElement);
+const axisCol=(css.getPropertyValue('--text-muted')||'#888').trim()||'#888';
+const txtCol=(css.getPropertyValue('--text-secondary')||'#666').trim()||'#666';
+function resize(){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;W=r.width;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);draw();}
+const X=x=>30+(x-x0)/(x1-x0)*(W-40), Y=y=>H-20-(y-y0)/(y1-y0)*(H-40);
+function curve(fn,col,w,dash){ctx.beginPath();ctx.setLineDash(dash||[]);ctx.strokeStyle=col;ctx.lineWidth=w;for(let i=0;i<=500;i++){const x=x0+(x1-x0)*i/500,px=X(x),py=Y(fn(x));i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();ctx.setLineDash([]);}
+function draw(){
+ctx.clearRect(0,0,W,H);
+ctx.strokeStyle=axisCol;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X(x0),Y(0));ctx.lineTo(X(x1),Y(0));ctx.stroke();
+ctx.fillStyle=txtCol;ctx.font='12px sans-serif';
+for(let k=0;k<N;k+=2){ctx.fillText(k+'Δx',X(k*dx)-8,Y(0)+16);}
+if(document.getElementById('orig').checked)curve(f,'#888780',1.5,[5,4]);
+if(document.getElementById('all').checked)for(let k=0;k<added;k++)curve(x=>stamp(k,x),'#AFA9EC',1);
+const cur=added<N?added:-1;
+if(cur>=0&&prog>0)curve(x=>prog*stamp(cur,x),'#D85A30',2);
+curve(x=>{let s=0;for(let k=0;k<added;k++)s+=stamp(k,x);if(cur>=0)s+=prog*stamp(cur,x);return s;},'#0F6E56',3);
+for(let k=0;k<N;k++){ctx.beginPath();ctx.arc(X(k*dx),Y(fk[k]),k===cur?6:4,0,2*Math.PI);ctx.fillStyle=k<added?'#1D9E75':(k===cur?'#D85A30':'#9FE1CB');ctx.fill();}
+const s=document.getElementById('status');
+if(added>=N)s.textContent='All '+N+' stamps added. The sum now matches the original signal almost everywhere (small errors near the edges, because the samples stop there).';
+else s.textContent='Stamp '+(cur+1)+' of '+N+': sample at '+cur+'Δx has value '+fk[cur].toFixed(2)+', so its sinc is scaled to height '+fk[cur].toFixed(2)+'. It is zero at every other sample.';
+}
+function tick(){if(playing){prog+=0.025;if(prog>=1){prog=0;added++;if(added>=N){playing=false;setBtn();}}draw();}requestAnimationFrame(tick);}
+const pb=document.getElementById('play');
+function setBtn(){pb.innerHTML=playing?'<i class="ti ti-player-pause" aria-hidden="true"></i> Pause':'<i class="ti ti-player-play" aria-hidden="true"></i> Play';}
+pb.onclick=()=>{if(added>=N){added=0;prog=0;}playing=!playing;setBtn();};
+document.getElementById('step').onclick=()=>{playing=false;setBtn();if(added<N){added++;prog=0;}draw();};
+document.getElementById('reset').onclick=()=>{playing=false;added=0;prog=0;setBtn();draw();};
+document.getElementById('orig').onchange=draw;document.getElementById('all').onchange=draw;
+window.addEventListener('resize',resize);resize();requestAnimationFrame(tick);
+</script>
